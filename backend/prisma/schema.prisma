@@ -1,0 +1,206 @@
+// Arena — core domain model.
+// Spine for B0–B4: users, auth, social graph, competitions, per-competition
+// participations, and positions. Gamification / leagues / lessons / notifications
+// models are added in their own milestones.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  GOOGLE
+  APPLE
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum CompetitionType {
+  PRIVATE_LEAGUE // invite-only, friends
+  DUEL // 1v1 head-to-head
+  PUBLIC_DIVISION // open weekly division
+}
+
+enum CompetitionStatus {
+  SCHEDULED
+  LIVE
+  SETTLING
+  FINISHED
+}
+
+enum PositionSide {
+  LONG
+  SHORT
+}
+
+enum PositionStatus {
+  OPEN
+  CLOSED
+  LIQUIDATED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String? // null when only social-auth
+  username     String   @unique
+  displayName  String?
+  avatarUrl    String?
+  country      String? // ISO-2, e.g. "TR"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  authIdentities AuthIdentity[]
+  refreshTokens  RefreshToken[]
+  stats          ProfileStats?
+  participations Participation[]
+  competitions   Competition[]   @relation("CompetitionCreator")
+
+  sentFriendRequests     Friendship[] @relation("FriendRequester")
+  receivedFriendRequests Friendship[] @relation("FriendAddressee")
+}
+
+model AuthIdentity {
+  id             String       @id @default(cuid())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  provider       AuthProvider
+  providerUserId String
+  createdAt      DateTime     @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String    @unique
+  device    String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model ProfileStats {
+  userId             String   @id
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xp                 Int      @default(0)
+  level              Int      @default(1)
+  streakCount        Int      @default(0)
+  lastActiveDate     DateTime?
+  competitionsPlayed Int      @default(0)
+  wins               Int      @default(0)
+  updatedAt          DateTime @updatedAt
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requester   User             @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  addressee   User             @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+}
+
+// Tradable instrument registry — admin-editable, drives leverage caps & display.
+model Instrument {
+  symbol         String  @id // e.g. BTCUSDT
+  label          String // e.g. BTC/USDT
+  base           String // e.g. BTC
+  pricePrecision Int     @default(2)
+  qtyStep        Float   @default(0.0001)
+  maxLeverage    Int     @default(100)
+  enabled        Boolean @default(true)
+  sortOrder      Int     @default(0)
+}
+
+model Competition {
+  id              String            @id @default(cuid())
+  name            String
+  type            CompetitionType
+  creator         User?             @relation("CompetitionCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId       String?
+  instruments     String[] // symbols allowed in this competition
+  startingBalance Float             @default(100000)
+  maxLeverage     Int               @default(20)
+  joinCode        String?           @unique
+  maxParticipants Int?
+  status          CompetitionStatus @default(SCHEDULED)
+  startAt         DateTime
+  endAt           DateTime
+  createdAt       DateTime          @default(now())
+
+  participations Participation[]
+
+  @@index([status, endAt])
+}
+
+model Participation {
+  id            String      @id @default(cuid())
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  competitionId String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  cashBalance   Float
+  finalRank     Int?
+  finalEquity   Float?
+  joinedAt      DateTime    @default(now())
+
+  positions Position[]
+
+  @@unique([competitionId, userId])
+  @@index([userId])
+}
+
+model Position {
+  id               String         @id @default(cuid())
+  participation    Participation  @relation(fields: [participationId], references: [id], onDelete: Cascade)
+  participationId  String
+  symbol           String
+  side             PositionSide
+  qty              Float
+  leverage         Int
+  entryPrice       Float
+  margin           Float
+  liquidationPrice Float
+  status           PositionStatus @default(OPEN)
+  closePrice       Float?
+  realizedPnl      Float?
+  openedAt         DateTime       @default(now())
+  closedAt         DateTime?
+
+  @@index([participationId, status])
+}
+
+// Generic key/value runtime settings (JSON-encoded) + admin audit trail.
+model Setting {
+  key   String @id
+  value String
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  action    String
+  target    String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -1,0 +1,8 @@
+# monorepo root
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+.DS_Store
