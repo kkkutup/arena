@@ -2,11 +2,14 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
+import type { AuthProvider } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { UpdateMeDto } from './dto';
 
@@ -34,11 +37,88 @@ type UserWithStats = {
 
 @Injectable()
 export class AuthService {
+  private readonly googleClient = new OAuth2Client();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
   ) {}
+
+  async googleSignIn(idToken: string) {
+    const audiences = (this.config.get<string>('GOOGLE_CLIENT_ID') ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (audiences.length === 0) {
+      throw new ServiceUnavailableException('Google sign-in is not configured');
+    }
+    let payload;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({ idToken, audience: audiences });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException('Invalid Google token');
+    }
+    if (!payload?.sub || !payload.email) {
+      throw new UnauthorizedException('Invalid Google token');
+    }
+    return this.socialSignIn('GOOGLE', payload.sub, payload.email, payload.name, payload.picture);
+  }
+
+  private async socialSignIn(
+    provider: AuthProvider,
+    providerUserId: string,
+    email: string,
+    name?: string,
+    picture?: string,
+  ) {
+    const e = email.toLowerCase().trim();
+
+    const identity = await this.prisma.authIdentity.findUnique({
+      where: { provider_providerUserId: { provider, providerUserId } },
+      include: { user: { include: { stats: true } } },
+    });
+    if (identity) return this.session(identity.user);
+
+    const linked = await this.prisma.user.findUnique({
+      where: { email: e },
+      include: { stats: true },
+    });
+    if (linked) {
+      await this.prisma.authIdentity.create({
+        data: { provider, providerUserId, userId: linked.id },
+      });
+      return this.session(linked);
+    }
+
+    const username = await this.uniqueUsername(name ?? e.split('@')[0]);
+    const created = await this.prisma.user.create({
+      data: {
+        email: e,
+        username,
+        displayName: name ?? username,
+        avatarUrl: picture ?? null,
+        country: 'TR',
+        stats: { create: {} },
+        authIdentities: { create: { provider, providerUserId } },
+      },
+      include: { stats: true },
+    });
+    return this.session(created);
+  }
+
+  private async uniqueUsername(seed: string): Promise<string> {
+    let base = seed.toLowerCase().replace(/[^a-z0-9_.]/g, '').slice(0, 18);
+    if (base.length < 3) base = 'trader' + base;
+    let candidate = base;
+    for (let i = 0; i < 25; i++) {
+      const exists = await this.prisma.user.findUnique({ where: { username: candidate } });
+      if (!exists) return candidate;
+      candidate = base.slice(0, 14) + Math.floor(Math.random() * 10000);
+    }
+    return base.slice(0, 12) + Date.now().toString().slice(-6);
+  }
 
   private publicUser(u: UserWithStats) {
     const s = u.stats;
