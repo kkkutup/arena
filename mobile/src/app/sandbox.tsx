@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, useWindowDimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Card, Icon } from '@/ui';
 import { colors, spacing, radius } from '@/theme/tokens';
@@ -20,7 +21,8 @@ function changePct(candles: Candle[]): number {
   return ((candles[candles.length - 1].close - first) / first) * 100;
 }
 
-export default function Trade() {
+export default function Sandbox() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const engine = usePriceEngine();
   const [symbol, setSymbol] = useState(INSTRUMENTS[0].symbol);
@@ -68,6 +70,10 @@ export default function Trade() {
 
   return (
     <Screen>
+      <Pressable onPress={() => router.back()} style={{ paddingVertical: spacing.sm, alignSelf: 'flex-start' }}>
+        <Icon name="chevron-back" size={28} color={colors.ink} />
+      </Pressable>
+
       {/* account bar */}
       <Card flat style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm }}>
         <Stat label="Equity" value={fmtUsd(equity, 2)} />

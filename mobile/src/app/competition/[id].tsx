@@ -52,7 +52,7 @@ export default function CompetitionDetail() {
             variant="success"
             full
             style={{ marginTop: spacing.md }}
-            onPress={() => router.push('/trade')}
+            onPress={() => router.push('/sandbox')}
           />
 
           <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.sm }}>

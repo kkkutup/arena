@@ -30,8 +30,8 @@ export default function TabsLayout() {
         options={{ title: 'Compete', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'trophy' : 'trophy-outline'} color={color} size={size} /> }}
       />
       <Tabs.Screen
-        name="trade"
-        options={{ title: 'Trade', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'pulse' : 'pulse-outline'} color={color} size={size} /> }}
+        name="learn"
+        options={{ title: 'Learn', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'school' : 'school-outline'} color={color} size={size} /> }}
       />
       <Tabs.Screen
         name="social"
