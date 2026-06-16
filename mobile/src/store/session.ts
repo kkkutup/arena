@@ -1,26 +1,41 @@
 import { create } from 'zustand';
 import type { Me } from '@/api/types';
+import type { AuthSession } from '@/api/auth';
 
 type AuthMethod = 'google' | 'apple' | 'email';
 
 interface SessionState {
   user: Me | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   needsProfile: boolean;
+  // Real auth (backend): store tokens + user.
+  setSession: (session: AuthSession) => void;
+  // Mock auth (used by the email form until it's wired to the backend).
   signInWith: (method: AuthMethod, email?: string) => void;
   completeProfile: (username: string, displayName?: string) => void;
   signOut: () => void;
 }
 
-// Mock auth for the UI-first phase. Any sign-in creates a fresh local user and
-// routes through profile setup. Swapped for real JWT auth when the backend
-// (B1) is wired in.
 export const useSession = create<SessionState>((set) => ({
   user: null,
+  accessToken: null,
+  refreshToken: null,
   needsProfile: false,
+
+  setSession: (session) =>
+    set({
+      user: session.user,
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      needsProfile: false,
+    }),
 
   signInWith: (method, email) =>
     set({
       needsProfile: true,
+      accessToken: null,
+      refreshToken: null,
       user: {
         id: 'me',
         username: '',
@@ -49,12 +64,11 @@ export const useSession = create<SessionState>((set) => ({
               ...s.user,
               username: username.trim(),
               displayName: displayName?.trim() || username.trim(),
-              // give the mock account some life so screens look populated
               stats: { ...s.user.stats, xp: 430, level: 4, streakCount: 7 },
             },
           }
         : s,
     ),
 
-  signOut: () => set({ user: null, needsProfile: false }),
+  signOut: () => set({ user: null, accessToken: null, refreshToken: null, needsProfile: false }),
 }));

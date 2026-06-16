@@ -4,20 +4,46 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Txt, Button, TextField, Icon } from '@/ui';
 import { useSession } from '@/store/session';
+import { signInWithGoogle } from '@/lib/google';
+import { googleConfigured } from '@/lib/auth-config';
+import { authApi } from '@/api/auth';
 import { colors, spacing } from '@/theme/tokens';
 
-type Method = 'google' | 'apple' | 'email';
+type Method = 'apple' | 'email';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
   const router = useRouter();
   const signInWith = useSession((s) => s.signInWith);
+  const setSession = useSession((s) => s.setSession);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isSignup = mode === 'signup';
 
   const go = (method: Method) => {
     signInWith(method, method === 'email' ? email : undefined);
     router.replace('/profile-setup');
+  };
+
+  const googleSignIn = async () => {
+    setError(null);
+    if (!googleConfigured) {
+      setError('Google sign-in isn’t configured yet — add your Web client ID.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const idToken = await signInWithGoogle();
+      if (!idToken) return; // user cancelled
+      const session = await authApi.google(idToken);
+      setSession(session);
+      router.replace('/home');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Google sign-in failed');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -63,13 +89,20 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
             <View style={{ flex: 1, height: 1.5, backgroundColor: colors.line }} />
           </View>
 
+          {error ? (
+            <Txt variant="small" color={colors.down}>
+              {error}
+            </Txt>
+          ) : null}
+
           <View style={{ gap: spacing.sm }}>
             <Button
               label="Continue with Google"
               variant="outline"
               full
+              loading={busy}
               left={<Icon name="logo-google" color={colors.ink} />}
-              onPress={() => go('google')}
+              onPress={googleSignIn}
             />
             <Button
               label="Continue with Apple"
