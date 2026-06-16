@@ -16,6 +16,8 @@ export const envSchema = z.object({
   JWT_REFRESH_TTL_DAYS: z.coerce.number().int().positive().default(30),
   GOOGLE_CLIENT_ID: z.string().optional(),
   APPLE_CLIENT_ID: z.string().optional(),
+  BINANCE_REST: z.string().default('https://data-api.binance.vision'),
+  BINANCE_WS: z.string().default('wss://data-stream.binance.vision/ws'),
 });
 
 export type Env = z.infer<typeof envSchema>;
