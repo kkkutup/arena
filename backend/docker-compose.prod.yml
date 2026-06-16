@@ -43,7 +43,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
-      # Bound to localhost only — exposed publicly via a reverse proxy (TLS).
+      # Bound to localhost only — exposed publicly via Caddy (TLS) below.
       - '127.0.0.1:8080:8080'
     depends_on:
       postgres:
@@ -51,6 +51,23 @@ services:
       redis:
         condition: service_healthy
 
+  # Reverse proxy with automatic HTTPS (Let's Encrypt). Fronts the API on
+  # 80/443 and terminates TLS for the public hostname in ./Caddyfile.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
 volumes:
   pgdata:
   redisdata:
+  caddy_data:
+  caddy_config:

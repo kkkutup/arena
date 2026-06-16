@@ -1,0 +1,7 @@
+# Public HTTPS for the Arena API.
+# 95-216-202-119.sslip.io resolves to the server IP, so Let's Encrypt can issue
+# a real cert with no domain purchase. Swap this for a custom domain later.
+95-216-202-119.sslip.io {
+	encode gzip
+	reverse_proxy api:8080
+}
