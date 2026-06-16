@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { CelebrationOverlay } from '@/ui';
 import {
   useFonts,
   Nunito_400Regular,
@@ -41,6 +42,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }} />
+          <CelebrationOverlay />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -10,6 +10,7 @@ import { OrderTicket } from '@/features/trade/OrderTicket';
 import { PositionRow } from '@/features/trade/PositionRow';
 import { unrealizedPnl } from '@/features/trade/engine';
 import { useTrade } from '@/store/trade';
+import { useCelebration } from '@/store/celebration';
 import { fmtUsd, fmtSignedUsd, fmtPct, fmtPrice } from '@/lib/format';
 import type { Side } from '@/api/types';
 
@@ -27,8 +28,10 @@ export default function Trade() {
   const positions = useTrade((s) => s.positions);
   const cashBalance = useTrade((s) => s.cashBalance);
   const startingBalance = useTrade((s) => s.startingBalance);
+  const history = useTrade((s) => s.history);
   const openFn = useTrade((s) => s.open);
   const closeFn = useTrade((s) => s.close);
+  const celebrate = useCelebration((s) => s.celebrate);
 
   const inst = INSTRUMENTS.find((i) => i.symbol === symbol)!;
   const price = engine.prices[symbol] ?? 0;
@@ -46,10 +49,19 @@ export default function Trade() {
   const totalPnl = equity - startingBalance;
 
   const submit = (side: Side, qty: number, leverage: number) => {
+    const wasFirst = positions.length === 0 && history.length === 0;
     const id = openFn({ symbol, side, qty, leverage, price });
     void Haptics.notificationAsync(
       id ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
     );
+    if (id && wasFirst) {
+      celebrate({
+        icon: 'flash',
+        color: colors.gold,
+        title: 'First Trade!',
+        subtitle: 'You opened your first position. Welcome to the Arena.',
+      });
+    }
   };
 
   const chartWidth = width - spacing.lg * 2 - spacing.lg * 2;

@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Avatar, Button, Card, StreakFlame } from '@/ui';
 import { useSession } from '@/store/session';
+import { AchievementGrid } from '@/features/profile/AchievementGrid';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function Profile() {
@@ -25,8 +26,14 @@ export default function Profile() {
       <Card style={{ marginTop: spacing.xl, flexDirection: 'row', justifyContent: 'space-around' }}>
         <Stat label="Level" value={user.stats.level} />
         <Stat label="XP" value={user.stats.xp} />
+        <Stat label="Streak" value={user.stats.streakCount} />
         <Stat label="Wins" value={user.stats.wins} />
       </Card>
+
+      <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
+        Achievements
+      </Txt>
+      <AchievementGrid />
 
       <Button
         label="Sign out"
