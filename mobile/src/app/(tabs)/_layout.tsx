@@ -23,23 +23,23 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{ title: 'Home', tabBarIcon: ({ color, size }) => <Icon name="home" color={color} size={size} /> }}
+        options={{ title: 'Home', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'home' : 'home-outline'} color={color} size={size} /> }}
       />
       <Tabs.Screen
         name="compete"
-        options={{ title: 'Compete', tabBarIcon: ({ color, size }) => <Icon name="trophy" color={color} size={size} /> }}
+        options={{ title: 'Compete', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'trophy' : 'trophy-outline'} color={color} size={size} /> }}
       />
       <Tabs.Screen
         name="trade"
-        options={{ title: 'Trade', tabBarIcon: ({ color, size }) => <Icon name="pulse" color={color} size={size} /> }}
+        options={{ title: 'Trade', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'pulse' : 'pulse-outline'} color={color} size={size} /> }}
       />
       <Tabs.Screen
         name="social"
-        options={{ title: 'Friends', tabBarIcon: ({ color, size }) => <Icon name="people" color={color} size={size} /> }}
+        options={{ title: 'Friends', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'people' : 'people-outline'} color={color} size={size} /> }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', tabBarIcon: ({ color, size }) => <Icon name="person" color={color} size={size} /> }}
+        options={{ title: 'Profile', tabBarIcon: ({ color, size, focused }) => <Icon name={focused ? 'person' : 'person-outline'} color={color} size={size} /> }}
       />
     </Tabs>
   );

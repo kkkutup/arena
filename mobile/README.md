@@ -1,56 +1,58 @@
-# Welcome to your Expo app 👋
+# Arena — Mobile App (Expo / React Native)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Android-first, "Duolingo for trading." Built UI-first on **mock data** — every screen
+is interactive without the backend. The data layer (`src/api`) is a swappable seam:
+flip `mockClient` → `httpClient` to talk to the real NestJS API later.
 
-## Get started
+## Run it on your phone (Android)
 
-1. Install dependencies
-
+1. Install **Expo Go** from the Play Store.
+2. In this folder:
    ```bash
    npm install
+   npx expo start --tunnel
    ```
+   (`--tunnel` lets your phone connect even off the same network. First run may ask you
+   to log in to a free Expo account and install `@expo/ngrok` — say yes.)
+3. Scan the QR code with **Expo Go**. The app loads and hot-reloads on save.
 
-2. Start the app
+> No Android Studio or emulator needed. iOS works too (`i`), but we're Android-first.
 
-   ```bash
-   npx expo start
-   ```
+## What's here (mock data)
 
-In the output, you'll find options to open the app in a
+- **Onboarding → signup/login (email/Google/Apple, mocked) → profile setup**
+- **Home** — streak, daily-goal ring, your competitions, friends activity
+- **Trade** — live mock candlestick chart, instrument tabs, order ticket (long/short,
+  leverage, margin/liq preview), open positions with live P&L, liquidations
+- **Compete** — competitions list, create, join-by-code, competition leaderboards,
+  weekly division with promote/relegate zones
+- **Friends** — requests, friends, suggested, duel/add
+- **Profile** — stats + achievements (tap an unlocked one for the celebration)
+- Celebration overlay fires on your **first trade**
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Tech
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Expo Router · TypeScript · custom theme (`src/theme`) + Nunito · react-native-svg charts ·
+Zustand (session/trade/celebration) · TanStack Query · expo-haptics · reanimated.
 
-## Get a fresh project
+## Project map
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/
+  app/         routes (expo-router): (auth), (tabs), competition/[id], create-competition, join, division
+  ui/          design system (Button, Card, Txt, ProgressRing, Avatar, …)
+  features/    auth, trade, competitions, social, profile, common
+  api/         client seam (mock now) + types mirroring the backend
+  mock/        fixtures
+  store/       zustand stores
+  hooks/       query hooks
+  theme/       tokens
+  lib/         formatters
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Verify without a device
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx tsc --noEmit                              # types
+npx expo export --platform android            # full Metro bundle (catches config/import errors)
+```
