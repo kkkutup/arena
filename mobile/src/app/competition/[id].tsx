@@ -1,8 +1,9 @@
 import { View, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, Pill, Button, Card, Icon } from '@/ui';
-import { useCompetition } from '@/hooks/queries';
+import { useCompetition, useLeaderboard } from '@/hooks/queries';
 import { compTypeMeta } from '@/features/competitions/util';
+import { LeaderboardList } from '@/features/competitions/LeaderboardList';
 import { fmtPct, fmtUsd, timeLeft } from '@/lib/format';
 import { colors, spacing } from '@/theme/tokens';
 
@@ -10,6 +11,7 @@ export default function CompetitionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data: c, isLoading } = useCompetition(id);
+  const { data: rows } = useLeaderboard(id);
 
   return (
     <Screen>
@@ -53,11 +55,16 @@ export default function CompetitionDetail() {
             onPress={() => router.push('/trade')}
           />
 
-          <Card flat style={{ marginTop: spacing.lg, backgroundColor: colors.surfaceAlt }}>
-            <Txt variant="small" color={colors.muted} center>
-              Live leaderboard lands here in M5.
+          <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.sm }}>
+            Leaderboard
+          </Txt>
+          {rows ? (
+            <LeaderboardList rows={rows} />
+          ) : (
+            <Txt variant="small" color={colors.muted}>
+              Loading leaderboard…
             </Txt>
-          </Card>
+          )}
         </>
       )}
     </Screen>
