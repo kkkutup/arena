@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CelebrationOverlay } from '@/ui';
+import { TourOverlay } from '@/features/tour/TourOverlay';
 import {
   useFonts,
   Nunito_400Regular,
@@ -43,6 +44,7 @@ export default function RootLayout() {
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }} />
           <CelebrationOverlay />
+          <TourOverlay />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

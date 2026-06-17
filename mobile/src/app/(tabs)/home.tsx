@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -14,6 +15,9 @@ import type { IconName } from '@/ui/Icon';
 import { useSession } from '@/store/session';
 import { useCompetitions, useActivity } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
+import { TourTarget } from '@/features/tour/TourTarget';
+import { useTour } from '@/store/tour';
+import { HOME_TOUR } from '@/features/tour/steps';
 import type { ActivityItem } from '@/api/types';
 import { colors, spacing } from '@/theme/tokens';
 import { timeAgo } from '@/lib/format';
@@ -23,9 +27,19 @@ const DAILY_DONE = 38;
 
 export default function Home() {
   const user = useSession((s) => s.user);
+  const tourSeen = useSession((s) => s.tourSeen);
+  const markTourSeen = useSession((s) => s.markTourSeen);
+  const startTour = useTour((s) => s.start);
   const router = useRouter();
   const comps = useCompetitions();
   const activity = useActivity();
+
+  // First login only: kick off the coach-mark tour once the screen lays out.
+  useEffect(() => {
+    if (!user || tourSeen) return;
+    const t = setTimeout(() => void startTour(HOME_TOUR, markTourSeen), 500);
+    return () => clearTimeout(t);
+  }, [user, tourSeen, startTour, markTourSeen]);
 
   if (!user) return null;
 
@@ -39,30 +53,35 @@ export default function Home() {
           <Txt variant="title">{user.displayName || user.username}</Txt>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <StreakFlame count={user.stats.streakCount} size={20} />
+          <TourTarget id="home-streak">
+            <StreakFlame count={user.stats.streakCount} size={20} />
+          </TourTarget>
           <GemChip count={user.gems} />
         </View>
       </View>
 
-      <Card style={{ marginTop: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>
-        <ProgressRing progress={DAILY_DONE / DAILY_GOAL_XP} size={76} color={colors.gold}>
-          <Icon name="flash" size={26} color={colors.gold} />
-        </ProgressRing>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Txt variant="h3">Daily goal</Txt>
-          <Txt variant="body" color={colors.muted}>
-            {DAILY_DONE} / {DAILY_GOAL_XP} XP — keep your streak alive!
-          </Txt>
-        </View>
-      </Card>
+      <TourTarget id="home-daily" style={{ marginTop: spacing.lg }}>
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>
+          <ProgressRing progress={DAILY_DONE / DAILY_GOAL_XP} size={76} color={colors.gold}>
+            <Icon name="flash" size={26} color={colors.gold} />
+          </ProgressRing>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Txt variant="h3">Daily goal</Txt>
+            <Txt variant="body" color={colors.muted}>
+              {DAILY_DONE} / {DAILY_GOAL_XP} XP — keep your streak alive!
+            </Txt>
+          </View>
+        </Card>
+      </TourTarget>
 
-      <Button
-        label="Start a duel"
-        full
-        style={{ marginTop: spacing.lg }}
-        left={<Icon name="flash" color={colors.white} />}
-        onPress={() => router.push('/compete')}
-      />
+      <TourTarget id="home-duel" style={{ marginTop: spacing.lg }}>
+        <Button
+          label="Start a duel"
+          full
+          left={<Icon name="flash" color={colors.white} />}
+          onPress={() => router.push('/compete')}
+        />
+      </TourTarget>
 
       <SectionHeader title="Your competitions" action="See all" onAction={() => router.push('/compete')} />
       <View style={{ gap: spacing.md }}>

@@ -9,6 +9,10 @@ interface SessionState {
   accessToken: string | null;
   refreshToken: string | null;
   needsProfile: boolean;
+  // First-login coach-mark tour shown? (in-memory for now; persist with
+  // AsyncStorage later — that's a native add, so it needs a rebuild.)
+  tourSeen: boolean;
+  markTourSeen: () => void;
   // Real auth (backend): store tokens + user.
   setSession: (session: AuthSession) => void;
   // Mock auth (used by the email form until it's wired to the backend).
@@ -22,6 +26,9 @@ export const useSession = create<SessionState>((set) => ({
   accessToken: null,
   refreshToken: null,
   needsProfile: false,
+  tourSeen: false,
+
+  markTourSeen: () => set({ tourSeen: true }),
 
   setSession: (session) =>
     set({
@@ -70,5 +77,6 @@ export const useSession = create<SessionState>((set) => ({
         : s,
     ),
 
-  signOut: () => set({ user: null, accessToken: null, refreshToken: null, needsProfile: false }),
+  signOut: () =>
+    set({ user: null, accessToken: null, refreshToken: null, needsProfile: false, tourSeen: false }),
 }));
