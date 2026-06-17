@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -41,7 +41,10 @@ export default function Home() {
   const celebrate = useCelebration((s) => s.celebrate);
   const router = useRouter();
   const myComps = useMyCompetitions((s) => s.mine);
-  const nextLesson = useLessons((s) => s.nextLesson());
+  // Select the stable `completed` map (not a fresh object) to avoid an
+  // infinite getSnapshot loop, then derive next lesson via memo.
+  const lessonsCompleted = useLessons((s) => s.completed);
+  const nextLesson = useMemo(() => useLessons.getState().nextLesson(), [lessonsCompleted]);
   const activity = useActivity();
 
   // On the first login we run the coach-mark tour, then drop the daily diamond

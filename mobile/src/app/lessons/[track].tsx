@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, Icon, Card, ProgressBar } from '@/ui';
@@ -11,9 +12,10 @@ export default function TrackScreen() {
   const { track: trackId } = useLocalSearchParams<{ track: string }>();
   const router = useRouter();
   const track = getTrack(trackId);
+  const completed = useLessons((s) => s.completed);
   const isDone = useLessons((s) => s.isDone);
   const isUnlocked = useLessons((s) => s.isUnlocked);
-  const progress = useLessons((s) => s.trackProgress(trackId));
+  const progress = useMemo(() => useLessons.getState().trackProgress(trackId), [completed, trackId]);
 
   if (!track) return null;
 

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Card, Icon, Button, ProgressBar } from '@/ui';
@@ -63,7 +64,8 @@ export default function Learn() {
 }
 
 function TrackCard({ track, onPress }: { track: Track; onPress: () => void }) {
-  const progress = useLessons((s) => s.trackProgress(track.id));
+  const completed = useLessons((s) => s.completed);
+  const progress = useMemo(() => useLessons.getState().trackProgress(track.id), [completed, track.id]);
   const pct = progress.total ? progress.done / progress.total : 0;
   return (
     <Pressable onPress={onPress}>
