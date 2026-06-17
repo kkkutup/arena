@@ -8,8 +8,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CelebrationOverlay } from '@/ui';
 import { TourOverlay } from '@/features/tour/TourOverlay';
 import { DiamondStoreSheet } from '@/features/wallet/DiamondStoreSheet';
+import { enableFreeze } from 'react-native-screens';
+import * as SystemUI from 'expo-system-ui';
 import { useThemeSync } from '@/store/theme';
 import { colors } from '@/theme/tokens';
+
+// Don't freeze inactive screens: they subscribe to the theme store, and a
+// frozen screen misses store updates and won't re-render on unfreeze — which
+// left some tabs stuck on the old palette after a night-mode toggle.
+enableFreeze(false);
 import {
   useFonts,
   Nunito_400Regular,
@@ -38,6 +45,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();
   }, [fontsLoaded]);
+
+  // Tint the root window (under/behind screens + status bar) to match the theme.
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(colors.bg);
+  }, [mode]);
 
   if (!fontsLoaded) return null;
 

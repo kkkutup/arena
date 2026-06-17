@@ -6,7 +6,7 @@ import { Platform, type TextStyle, type ViewStyle } from 'react-native';
 
 // Brand + semantic hues are shared; only neutrals/tints differ between themes.
 // `night` is an always-dark surface (e.g. premium hero) that ignores the theme.
-const lightColors = {
+export const lightColors = {
   // brand
   primary: '#6C5CE7',
   primaryDark: '#5646C4', // darker bottom edge for the "3D" chunky button
@@ -44,7 +44,7 @@ const lightColors = {
   diamond: '#41C7E8',
 };
 
-const darkColors: typeof lightColors = {
+export const darkColors: typeof lightColors = {
   ...lightColors,
   primaryTint: '#272140',
   upTint: '#11271F',

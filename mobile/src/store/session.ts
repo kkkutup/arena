@@ -15,6 +15,9 @@ interface SessionState {
   // AsyncStorage later — that's a native add, so it needs a rebuild.)
   tourSeen: boolean;
   markTourSeen: () => void;
+  // Backtest mini-game intro tour shown?
+  btTourSeen: boolean;
+  markBtTourSeen: () => void;
   // Award XP (e.g. from the backtest game); recomputes level.
   addXp: (n: number) => void;
   // Real auth (backend): store tokens + user.
@@ -31,8 +34,10 @@ export const useSession = create<SessionState>((set) => ({
   refreshToken: null,
   needsProfile: false,
   tourSeen: false,
+  btTourSeen: false,
 
   markTourSeen: () => set({ tourSeen: true }),
+  markBtTourSeen: () => set({ btTourSeen: true }),
 
   addXp: (n) =>
     set((s) =>
@@ -104,6 +109,13 @@ export const useSession = create<SessionState>((set) => ({
   signOut: () => {
     useWallet.getState().reset();
     useMyCompetitions.getState().reset();
-    set({ user: null, accessToken: null, refreshToken: null, needsProfile: false, tourSeen: false });
+    set({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      needsProfile: false,
+      tourSeen: false,
+      btTourSeen: false,
+    });
   },
 }));
