@@ -15,7 +15,7 @@ import * as mock from '@/mock/data';
 export interface ApiClient {
   getCompetitions(): Promise<Competition[]>;
   getPublicCompetitions(): Promise<Competition[]>;
-  getCompetition(id: string): Promise<Competition | undefined>;
+  getCompetition(id: string): Promise<Competition | null>;
   getLeaderboard(competitionId: string): Promise<LeaderboardRow[]>;
   getActivity(): Promise<ActivityItem[]>;
   getFriends(): Promise<Friend[]>;
@@ -38,7 +38,7 @@ export const mockClient: ApiClient = {
   },
   async getCompetition(id) {
     await delay();
-    return [...mock.COMPETITIONS, ...mock.PUBLIC_COMPETITIONS].find((c) => c.id === id);
+    return [...mock.COMPETITIONS, ...mock.PUBLIC_COMPETITIONS].find((c) => c.id === id) ?? null;
   },
   async getLeaderboard(id) {
     await delay();

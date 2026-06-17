@@ -15,6 +15,8 @@ interface SessionState {
   // AsyncStorage later — that's a native add, so it needs a rebuild.)
   tourSeen: boolean;
   markTourSeen: () => void;
+  // Award XP (e.g. from the backtest game); recomputes level.
+  addXp: (n: number) => void;
   // Real auth (backend): store tokens + user.
   setSession: (session: AuthSession) => void;
   // Mock auth (used by the email form until it's wired to the backend).
@@ -31,6 +33,22 @@ export const useSession = create<SessionState>((set) => ({
   tourSeen: false,
 
   markTourSeen: () => set({ tourSeen: true }),
+
+  addXp: (n) =>
+    set((s) =>
+      s.user
+        ? {
+            user: {
+              ...s.user,
+              stats: {
+                ...s.user.stats,
+                xp: s.user.stats.xp + n,
+                level: Math.floor((s.user.stats.xp + n) / 100) + 1,
+              },
+            },
+          }
+        : s,
+    ),
 
   setSession: (session) => {
     useWallet.getState().reset();

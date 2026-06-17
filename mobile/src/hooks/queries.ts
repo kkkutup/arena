@@ -7,14 +7,15 @@ export const useCompetitions = () =>
 export const usePublicCompetitions = () =>
   useQuery({ queryKey: ['public-competitions'], queryFn: () => api.getPublicCompetitions() });
 
-export const useCompetition = (id: string) =>
-  useQuery({ queryKey: ['competition', id], queryFn: () => api.getCompetition(id) });
+export const useCompetition = (id: string, enabled = true) =>
+  useQuery({ queryKey: ['competition', id], queryFn: () => api.getCompetition(id), enabled });
 
-export const useLeaderboard = (id: string) =>
+export const useLeaderboard = (id: string, enabled = true) =>
   useQuery({
     queryKey: ['leaderboard', id],
     queryFn: () => api.getLeaderboard(id),
     refetchInterval: 4000,
+    enabled,
   });
 
 export const useActivity = () =>

@@ -23,6 +23,7 @@ interface CompetitionsState {
   mine: Competition[];
   create: (input: CreateInput) => Competition;
   joinByCode: (code: string) => Competition;
+  join: (comp: Competition) => Competition;
   getById: (id: string) => Competition | undefined;
   reset: () => void;
 }
@@ -72,6 +73,21 @@ export const useMyCompetitions = create<CompetitionsState>((set, get) => ({
     };
     set((s) => ({ mine: [c, ...s.mine] }));
     return c;
+  },
+
+  // Join an existing (e.g. public/browsed) competition.
+  join: (comp) => {
+    const existing = get().mine.find((c) => c.id === comp.id);
+    if (existing) return existing;
+    const joined: Competition = {
+      ...comp,
+      participantCount: comp.participantCount + 1,
+      myRank: comp.participantCount + 1,
+      myEquity: comp.startingBalance,
+      myReturnPct: 0,
+    };
+    set((s) => ({ mine: [joined, ...s.mine] }));
+    return joined;
   },
 
   getById: (id) => get().mine.find((c) => c.id === id),

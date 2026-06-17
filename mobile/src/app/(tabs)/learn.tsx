@@ -1,22 +1,63 @@
-import { View } from 'react-native';
+import { View, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Screen, Txt, Card, Icon, Button } from '@/ui';
 import { colors, spacing, radius } from '@/theme/tokens';
 
-// Premium "Learn" hub: bite-sized lessons + a backtesting lab.
-// Intentionally blank for now — this is the placeholder/teaser for the
-// premium subscription tier. Real content is wired up later.
-
+// Learn hub: a free, playable Backtest challenge now; premium Lessons later.
 export default function Learn() {
+  const router = useRouter();
+
   return (
     <Screen>
       <View style={{ marginTop: spacing.sm, marginBottom: spacing.lg }}>
         <Txt variant="title">Learn</Txt>
         <Txt variant="body" color={colors.muted} style={{ marginTop: 2 }}>
-          Lessons & backtesting
+          Practice with backtests, master with lessons
         </Txt>
       </View>
 
-      {/* Premium hero */}
+      {/* Playable backtest challenge */}
+      <Pressable onPress={() => router.push('/backtest')}>
+        <Card style={{ gap: spacing.md }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: radius.lg,
+                backgroundColor: colors.upTint,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="stats-chart" size={26} color={colors.up} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Txt variant="h3">Backtest challenge</Txt>
+                <View
+                  style={{
+                    backgroundColor: colors.upTint,
+                    borderRadius: radius.sm,
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Txt variant="tiny" color={colors.upDark}>
+                    FREE
+                  </Txt>
+                </View>
+              </View>
+              <Txt variant="small" color={colors.muted} style={{ marginTop: 2 }}>
+                A mystery chart appears — set your stop-loss & take-profit, reveal the outcome, earn XP.
+              </Txt>
+            </View>
+          </View>
+          <Button label="Play" variant="success" full onPress={() => router.push('/backtest')} />
+        </Card>
+      </Pressable>
+
+      {/* Premium lessons teaser */}
       <Card
         flat
         style={{
@@ -24,6 +65,7 @@ export default function Learn() {
           borderColor: colors.ink,
           alignItems: 'center',
           paddingVertical: spacing.xl,
+          marginTop: spacing.lg,
         }}
       >
         <View
@@ -36,88 +78,23 @@ export default function Learn() {
             justifyContent: 'center',
           }}
         >
-          <Icon name="diamond" size={30} color={colors.gold} />
+          <Icon name="school" size={30} color={colors.gold} />
         </View>
         <Txt variant="tiny" color={colors.gold} style={{ marginTop: spacing.md }}>
           ARENA PREMIUM
         </Txt>
         <Txt variant="h2" color={colors.white} style={{ marginTop: spacing.xs, textAlign: 'center' }}>
-          Master the markets
+          Lessons
         </Txt>
         <Txt
           variant="body"
           color={colors.faint}
           style={{ marginTop: spacing.sm, textAlign: 'center', maxWidth: 280 }}
         >
-          Bite-sized trading lessons and a full backtesting lab to sharpen your
-          strategy before you compete.
+          Bite-sized, Duolingo-style lessons that teach trading strategy step by step.
         </Txt>
-        <Button
-          label="Coming soon"
-          variant="neutral"
-          disabled
-          style={{ marginTop: spacing.lg }}
-        />
+        <Button label="Coming soon" variant="neutral" disabled style={{ marginTop: spacing.lg }} />
       </Card>
-
-      {/* Feature teasers */}
-      <Txt variant="h3" style={{ marginTop: spacing.xl, marginBottom: spacing.sm }}>
-        What's inside
-      </Txt>
-      <View style={{ gap: spacing.md }}>
-        <FeatureRow
-          icon="school"
-          tint={colors.primaryTint}
-          color={colors.primary}
-          title="Lessons"
-          subtitle="Learn strategies step by step, Duolingo-style."
-        />
-        <FeatureRow
-          icon="stats-chart"
-          tint={colors.upTint}
-          color={colors.up}
-          title="Backtest lab"
-          subtitle="Replay real market history and test your ideas."
-        />
-      </View>
     </Screen>
-  );
-}
-
-function FeatureRow({
-  icon,
-  tint,
-  color,
-  title,
-  subtitle,
-}: {
-  icon: React.ComponentProps<typeof Icon>['name'];
-  tint: string;
-  color: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <Card flat style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-      <View
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: radius.md,
-          backgroundColor: tint,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Icon name={icon} size={22} color={color} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Txt variant="bodyBold">{title}</Txt>
-        <Txt variant="small" color={colors.muted} style={{ marginTop: 1 }}>
-          {subtitle}
-        </Txt>
-      </View>
-      <Icon name="lock-closed" size={18} color={colors.faint} />
-    </Card>
   );
 }

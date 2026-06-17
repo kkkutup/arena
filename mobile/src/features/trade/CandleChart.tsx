@@ -4,14 +4,29 @@ import Svg, { Rect, Line } from 'react-native-svg';
 import { colors } from '@/theme/tokens';
 import type { Candle } from './usePriceEngine';
 
+export interface PriceLine {
+  price: number;
+  color: string;
+  dashed?: boolean;
+}
+
 export function CandleChart({
   candles,
   width,
   height,
+  lines,
+  domain,
+  slotCount,
 }: {
   candles: Candle[];
   width: number;
   height: number;
+  // optional horizontal price markers (SL / TP / entry)
+  lines?: PriceLine[];
+  // fixed price domain so the y-scale stays put while candles are revealed
+  domain?: { min: number; max: number };
+  // fixed number of horizontal slots (so a growing series keeps candle width)
+  slotCount?: number;
 }) {
   if (candles.length === 0 || width <= 0) return <View style={{ width, height }} />;
 
@@ -21,9 +36,18 @@ export function CandleChart({
 
   let max = -Infinity;
   let min = Infinity;
-  for (const c of candles) {
-    if (c.high > max) max = c.high;
-    if (c.low < min) min = c.low;
+  if (domain) {
+    min = domain.min;
+    max = domain.max;
+  } else {
+    for (const c of candles) {
+      if (c.high > max) max = c.high;
+      if (c.low < min) min = c.low;
+    }
+    for (const l of lines ?? []) {
+      if (l.price > max) max = l.price;
+      if (l.price < min) min = l.price;
+    }
   }
   if (max === min) {
     max += 1;
@@ -31,7 +55,8 @@ export function CandleChart({
   }
   const range = max - min;
   const n = candles.length;
-  const slot = width / n;
+  const slots = slotCount ?? n;
+  const slot = width / slots;
   const bodyW = Math.max(2.5, slot * 0.62);
   const y = (p: number) => padTop + (1 - (p - min) / range) * h;
 
@@ -41,6 +66,20 @@ export function CandleChart({
 
   return (
     <Svg width={width} height={height}>
+      {/* SL / TP / entry markers */}
+      {(lines ?? []).map((l, i) => (
+        <Line
+          key={`l${i}`}
+          x1={0}
+          y1={y(l.price)}
+          x2={width}
+          y2={y(l.price)}
+          stroke={l.color}
+          strokeWidth={1.5}
+          strokeDasharray={l.dashed === false ? undefined : '5 4'}
+          opacity={0.9}
+        />
+      ))}
       {/* current price guide */}
       <Line
         x1={0}
