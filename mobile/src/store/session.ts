@@ -18,7 +18,10 @@ interface SessionState {
   // Backtest mini-game intro tour shown?
   btTourSeen: boolean;
   markBtTourSeen: () => void;
-  // Award XP (e.g. from the backtest game); recomputes level.
+  // XP earned today (drives the Home daily goal). Resets on a new day.
+  dailyXp: number;
+  dailyXpDate: string | null;
+  // Award XP (e.g. from the backtest game); recomputes level + daily progress.
   addXp: (n: number) => void;
   // Real auth (backend): store tokens + user.
   setSession: (session: AuthSession) => void;
@@ -35,25 +38,24 @@ export const useSession = create<SessionState>((set) => ({
   needsProfile: false,
   tourSeen: false,
   btTourSeen: false,
+  dailyXp: 0,
+  dailyXpDate: null,
 
   markTourSeen: () => set({ tourSeen: true }),
   markBtTourSeen: () => set({ btTourSeen: true }),
 
   addXp: (n) =>
-    set((s) =>
-      s.user
-        ? {
-            user: {
-              ...s.user,
-              stats: {
-                ...s.user.stats,
-                xp: s.user.stats.xp + n,
-                level: Math.floor((s.user.stats.xp + n) / 100) + 1,
-              },
-            },
-          }
-        : s,
-    ),
+    set((s) => {
+      if (!s.user) return s;
+      const today = new Date().toISOString().slice(0, 10);
+      const dailyXp = (s.dailyXpDate === today ? s.dailyXp : 0) + n;
+      const xp = s.user.stats.xp + n;
+      return {
+        dailyXp,
+        dailyXpDate: today,
+        user: { ...s.user, stats: { ...s.user.stats, xp, level: Math.floor(xp / 100) + 1 } },
+      };
+    }),
 
   setSession: (session) => {
     useWallet.getState().reset();
@@ -116,6 +118,8 @@ export const useSession = create<SessionState>((set) => ({
       needsProfile: false,
       tourSeen: false,
       btTourSeen: false,
+      dailyXp: 0,
+      dailyXpDate: null,
     });
   },
 }));

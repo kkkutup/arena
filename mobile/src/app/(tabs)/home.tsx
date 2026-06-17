@@ -29,11 +29,11 @@ import { colors, spacing } from '@/theme/tokens';
 import { timeAgo } from '@/lib/format';
 
 const DAILY_GOAL_XP = 60;
-const DAILY_DONE = 38;
 
 export default function Home() {
   useThemeSync();
   const user = useSession((s) => s.user);
+  const dailyXp = useSession((s) => s.dailyXp);
   const tourSeen = useSession((s) => s.tourSeen);
   const markTourSeen = useSession((s) => s.markTourSeen);
   const startTour = useTour((s) => s.start);
@@ -80,7 +80,7 @@ export default function Home() {
     user.stats.competitionsPlayed === 0 &&
     user.stats.streakCount === 0 &&
     user.stats.xp === 0;
-  const dailyDone = fresh ? 0 : DAILY_DONE;
+  const dailyDone = Math.min(dailyXp, DAILY_GOAL_XP);
   const feed = fresh ? [] : activity.data ?? [];
 
   return (
@@ -110,9 +110,9 @@ export default function Home() {
           <View style={{ flex: 1, gap: 4 }}>
             <Txt variant="h3">Daily goal</Txt>
             <Txt variant="body" color={colors.muted}>
-              {fresh
-                ? `0 / ${DAILY_GOAL_XP} XP — start your streak today!`
-                : `${dailyDone} / ${DAILY_GOAL_XP} XP — keep your streak alive!`}
+              {dailyDone >= DAILY_GOAL_XP
+                ? `${dailyDone} / ${DAILY_GOAL_XP} XP — goal complete! 🎉`
+                : `${dailyDone} / ${DAILY_GOAL_XP} XP — play to earn XP today`}
             </Txt>
           </View>
         </Card>

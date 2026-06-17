@@ -5,9 +5,13 @@ import { useThemeSync } from '@/store/theme';
 import { colors, fonts } from '@/theme/tokens';
 
 export default function TabsLayout() {
-  useThemeSync();
+  const mode = useThemeSync();
   return (
+    // key={mode} remounts the tab navigator on a night-mode toggle so the tab
+    // bar + every tab rebuild with the new palette (React Navigation doesn't
+    // reliably re-apply tabBarStyle on a plain re-render).
     <Tabs
+      key={mode}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,

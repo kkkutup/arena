@@ -10,6 +10,8 @@ export const DIAMOND = {
   CREATE_COST: 25, // create a competition
   JOIN_COST: 10, // join a competition
   AD_REWARD: 30, // rewarded ad (stub)
+  BACKTEST_COST: 5, // play one backtest round
+  TRADE_REWARD: 1, // earned per successful (profitable) trade
 } as const;
 
 function today(): string {

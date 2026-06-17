@@ -7,6 +7,8 @@ import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { tierMeta } from '@/features/competitions/util';
 import { useMyCompetitions } from '@/store/competitions';
 import { useThemeSync } from '@/store/theme';
+import { useSession } from '@/store/session';
+import { myRank } from '@/features/ranking/global';
 import { useIsFresh } from '@/hooks/useIsFresh';
 import type { Division } from '@/api/types';
 import { colors, spacing, radius } from '@/theme/tokens';
@@ -16,9 +18,11 @@ export default function Compete() {
   useThemeSync();
   const router = useRouter();
   const fresh = useIsFresh();
+  const user = useSession((s) => s.user);
   const pub = usePublicCompetitions();
   const div = useDivision();
   const myComps = useMyCompetitions((s) => s.mine);
+  const rank = myRank(user?.displayName || user?.username || 'You', user?.stats.xp ?? 0);
 
   return (
     <Screen>
@@ -46,6 +50,30 @@ export default function Compete() {
           />
         </View>
       </View>
+
+      <Pressable onPress={() => router.push('/global')}>
+        <Card style={{ marginTop: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: radius.lg,
+              backgroundColor: colors.primaryTint,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon name="podium" size={26} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Txt variant="h3">Global ranking</Txt>
+            <Txt variant="small" color={colors.muted}>
+              You're #{rank.rank} of {rank.total} · earn XP to climb
+            </Txt>
+          </View>
+          <Icon name="chevron-forward" size={22} color={colors.faint} />
+        </Card>
+      </Pressable>
 
       {!fresh && div.data ? (
         <DivisionCard div={div.data} onPress={() => router.push('/division')} />

@@ -11,6 +11,7 @@ import { OrderTicket } from '@/features/trade/OrderTicket';
 import { PositionRow } from '@/features/trade/PositionRow';
 import { unrealizedPnl } from '@/features/trade/engine';
 import { useTrade } from '@/store/trade';
+import { useWallet, DIAMOND } from '@/store/wallet';
 import { useCelebration } from '@/store/celebration';
 import { fmtUsd, fmtSignedUsd, fmtPct, fmtPrice } from '@/lib/format';
 import type { Side } from '@/api/types';
@@ -36,6 +37,7 @@ export default function Sandbox() {
   const history = useTrade((s) => s.history);
   const openFn = useTrade((s) => s.open);
   const closeFn = useTrade((s) => s.close);
+  const addDiamonds = useWallet((s) => s.add);
   const celebrate = useCelebration((s) => s.celebrate);
 
   const inst = INSTRUMENTS.find((i) => i.symbol === symbol)!;
@@ -176,7 +178,10 @@ export default function Sandbox() {
               price={engine.prices[p.symbol] ?? p.entryPrice}
               last={i === positions.length - 1}
               onClose={() => {
-                closeFn(p.id, engine.prices[p.symbol] ?? p.entryPrice);
+                const exit = engine.prices[p.symbol] ?? p.entryPrice;
+                const pnl = unrealizedPnl(p.side, p.qty, p.entryPrice, exit);
+                closeFn(p.id, exit);
+                if (pnl > 0) addDiamonds(DIAMOND.TRADE_REWARD); // successful trade
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               }}
             />

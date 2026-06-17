@@ -8,34 +8,49 @@ import { LeaderboardList } from '@/features/competitions/LeaderboardList';
 import { useMyCompetitions } from '@/store/competitions';
 import { useWallet, DIAMOND } from '@/store/wallet';
 import { useSession } from '@/store/session';
+import { useTrade } from '@/store/trade';
+import { useThemeSync } from '@/store/theme';
 import type { Competition, LeaderboardRow, User } from '@/api/types';
 import { fmtPct, fmtUsd, timeLeft } from '@/lib/format';
 import { colors, spacing } from '@/theme/tokens';
 
 const BOTS = ['Mert', 'Zeynep', 'Deniz', 'Caner', 'Ece', 'Burak', 'Sıla', 'Kaan'];
 
-// Build a leaderboard for a store-backed competition (you + filler rivals).
-function synthRows(comp: Competition, me: User | null): LeaderboardRow[] {
+// Build a live leaderboard for a store-backed competition: your real trading
+// return (from the sandbox) ranked against filler rivals, re-sorted each render.
+function synthRows(
+  comp: Competition,
+  me: User | null,
+  myReturnPct: number,
+  myEquity: number,
+): LeaderboardRow[] {
   const n = Math.max(comp.participantCount, 1);
-  const myRank = comp.myRank ?? 1;
   const rows: LeaderboardRow[] = [];
-  for (let i = 1; i <= n; i++) {
-    const isMe = i === myRank;
-    const returnPct = isMe ? comp.myReturnPct ?? 0 : Number((6 - i * 0.8).toFixed(2));
+  for (let i = 0; i < n - 1; i++) {
+    const returnPct = Number((5.5 - i * 0.9).toFixed(2));
     rows.push({
-      rank: i,
-      userId: isMe ? 'me' : `b${i}`,
-      username: isMe ? me?.displayName || me?.username || 'You' : BOTS[(i * 2) % BOTS.length],
-      avatarUrl: isMe ? me?.avatarUrl ?? null : null,
+      rank: 0,
+      userId: `b${i}`,
+      username: BOTS[(i * 2) % BOTS.length],
+      avatarUrl: null,
       equity: comp.startingBalance * (1 + returnPct / 100),
       returnPct,
-      isMe,
+      isMe: false,
     });
   }
+  rows.push({
+    rank: 0,
+    userId: 'me',
+    username: me?.displayName || me?.username || 'You',
+    avatarUrl: me?.avatarUrl ?? null,
+    equity: myEquity,
+    returnPct: myReturnPct,
+    isMe: true,
+  });
+  rows.sort((a, b) => b.returnPct - a.returnPct);
+  rows.forEach((r, i) => (r.rank = i + 1));
   return rows;
 }
-
-import { useThemeSync } from '@/store/theme';
 
 export default function CompetitionDetail() {
   useThemeSync();
@@ -48,11 +63,20 @@ export default function CompetitionDetail() {
   const spend = useWallet((s) => s.spend);
   const openStore = useWallet((s) => s.openStore);
   const me = useSession((s) => s.user);
+  // Live trading account → drives the user's equity/return in the leaderboard.
+  const cash = useTrade((s) => s.cashBalance);
+  const startBal = useTrade((s) => s.startingBalance);
+  const myReturnPct = ((cash - startBal) / startBal) * 100;
   const { data: queried, isLoading } = useCompetition(id, !stored);
   const { data: mockRows } = useLeaderboard(id, !stored);
   const c = stored ?? queried;
   const loading = stored ? false : isLoading;
-  const rows: LeaderboardRow[] = stored ? synthRows(stored, me) : mockRows ?? [];
+  const rows: LeaderboardRow[] = stored ? synthRows(stored, me, myReturnPct, cash) : mockRows ?? [];
+  const myRow = rows.find((r) => r.isMe);
+  const isMine = !!stored;
+  const dispRank = isMine ? myRow?.rank ?? 1 : c?.myRank;
+  const dispEquity = isMine ? cash : c?.myEquity;
+  const dispReturn = isMine ? myReturnPct : c?.myReturnPct;
 
   const onJoin = () => {
     if (!c) return;
@@ -85,14 +109,14 @@ export default function CompetitionDetail() {
             {c.participantCount} traders · ends in {timeLeft(c.endAt)}
           </Txt>
 
-          {c.myRank != null ? (
+          {dispRank != null ? (
             <Card style={{ marginTop: spacing.lg, flexDirection: 'row', justifyContent: 'space-around' }}>
-              <Stat label="Your rank" value={`#${c.myRank}`} color={colors.ink} />
-              <Stat label="Equity" value={fmtUsd(c.myEquity ?? 0)} color={colors.ink} />
+              <Stat label="Your rank" value={`#${dispRank}`} color={colors.ink} />
+              <Stat label="Equity" value={fmtUsd(dispEquity ?? 0)} color={colors.ink} />
               <Stat
                 label="Return"
-                value={fmtPct(c.myReturnPct ?? 0)}
-                color={(c.myReturnPct ?? 0) >= 0 ? colors.up : colors.down}
+                value={fmtPct(dispReturn ?? 0)}
+                color={(dispReturn ?? 0) >= 0 ? colors.up : colors.down}
               />
             </Card>
           ) : (

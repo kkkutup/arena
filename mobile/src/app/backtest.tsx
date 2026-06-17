@@ -13,7 +13,7 @@ import {
   type Result,
 } from '@/features/backtest/engine';
 import { useSession } from '@/store/session';
-import { useWallet } from '@/store/wallet';
+import { useWallet, DIAMOND } from '@/store/wallet';
 import { useCelebration } from '@/store/celebration';
 import { useTour, type TourStep } from '@/store/tour';
 import { TourTarget } from '@/features/tour/TourTarget';
@@ -56,6 +56,8 @@ export default function Backtest() {
   const { width } = useWindowDimensions();
   const addXp = useSession((s) => s.addXp);
   const addDiamonds = useWallet((s) => s.add);
+  const spendDiamonds = useWallet((s) => s.spend);
+  const openStore = useWallet((s) => s.openStore);
   const celebrate = useCelebration((s) => s.celebrate);
   const startTour = useTour((s) => s.start);
   const btTourSeen = useSession((s) => s.btTourSeen);
@@ -137,7 +139,8 @@ export default function Backtest() {
   const finish = (res: Result) => {
     setPhase('done');
     addXp(res.points);
-    if (res.outcome === 'TP') addDiamonds(5);
+    // A successful (profitable) trade earns 1 diamond.
+    if (res.win) addDiamonds(DIAMOND.TRADE_REWARD);
     void Haptics.notificationAsync(
       res.win ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning,
     );
@@ -155,6 +158,12 @@ export default function Backtest() {
   };
 
   const start = () => {
+    // Playing a round costs diamonds; if too poor, open the get-diamonds sheet.
+    if (!spendDiamonds(DIAMOND.BACKTEST_COST)) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      openStore();
+      return;
+    }
     const res = evaluate(scenario, dir, slPrice, tpPrice);
     setResult(res);
     setPhase('revealing');
@@ -259,7 +268,12 @@ export default function Backtest() {
           </Txt>
 
           <TourTarget id="bt-reveal">
-            <Button label="Reveal outcome" variant="success" full onPress={start} />
+            <Button
+              label={`Reveal outcome · ${DIAMOND.BACKTEST_COST} 💎`}
+              variant="success"
+              full
+              onPress={start}
+            />
           </TourTarget>
         </View>
       ) : null}
@@ -292,10 +306,10 @@ export default function Backtest() {
               {fmtPct(result.pnlPct)}
             </Txt>
             <Txt variant="bodyBold" color={colors.primary}>
-              +{result.points} XP{result.outcome === 'TP' ? '  ·  +5 💎' : ''}
+              +{result.points} XP{result.win ? `  ·  +${DIAMOND.TRADE_REWARD} 💎` : ''}
             </Txt>
           </Card>
-          <Button label="Play again" variant="success" full onPress={reset} />
+          <Button label="Continue" variant="success" full onPress={reset} />
           <Button label="Back to Learn" variant="neutral" full onPress={() => router.back()} />
         </View>
       ) : null}
