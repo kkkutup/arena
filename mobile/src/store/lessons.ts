@@ -1,5 +1,15 @@
 import { create } from 'zustand';
-import { getTrack } from '@/features/lessons/curriculum';
+import { getTrack, TRACKS } from '@/features/lessons/curriculum';
+import type { IconName } from '@/ui/Icon';
+
+export interface NextLesson {
+  trackId: string;
+  lessonId: string;
+  title: string;
+  trackTitle: string;
+  color: string;
+  icon: IconName;
+}
 
 // Lesson progress (in-memory for now; persist with AsyncStorage at the next
 // native rebuild). Completing a lesson awards XP via the session store — see
@@ -11,6 +21,8 @@ interface LessonsState {
   trackProgress: (trackId: string) => { done: number; total: number };
   // Sequential unlock: first lesson, or the previous one is done.
   isUnlocked: (trackId: string, lessonId: string) => boolean;
+  // The first not-yet-done, unlocked lesson — drives "lesson of the day".
+  nextLesson: () => NextLesson | null;
   reset: () => void;
 }
 
@@ -34,6 +46,27 @@ export const useLessons = create<LessonsState>((set, get) => ({
     const i = track.lessons.findIndex((l) => l.id === lessonId);
     if (i <= 0) return true;
     return !!get().completed[track.lessons[i - 1].id];
+  },
+
+  nextLesson: () => {
+    const completed = get().completed;
+    for (const track of TRACKS) {
+      for (let i = 0; i < track.lessons.length; i++) {
+        const lesson = track.lessons[i];
+        const unlocked = i === 0 || !!completed[track.lessons[i - 1].id];
+        if (!completed[lesson.id] && unlocked) {
+          return {
+            trackId: track.id,
+            lessonId: lesson.id,
+            title: lesson.title,
+            trackTitle: track.title,
+            color: track.color,
+            icon: track.icon,
+          };
+        }
+      }
+    }
+    return null;
   },
 
   reset: () => set({ completed: {} }),

@@ -958,6 +958,81 @@ const WYCKOFF: Track = {
         },
       ],
     },
+    {
+      id: 'w-phases',
+      title: 'The 5 phases (A–E)',
+      teach: [
+        {
+          emoji: '🔤',
+          heading: 'A range unfolds in five acts',
+          body: 'A (stop the prior trend) → B (build the cause / the range) → C (the test: Spring or UTAD) → D (the move begins: SOS/SOW) → E (price leaves the range into the new trend).',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'order',
+          prompt: 'Order the Wyckoff phases (first → last).',
+          items: [
+            'A — stop the trend',
+            'B — build the cause',
+            'C — the test (spring/UTAD)',
+            'D — the move begins',
+            'E — leave the range',
+          ],
+          explain: 'A→B→C→D→E: stop, build, test, move, leave.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'The Spring or UTAD happens in phase…',
+          options: ['C', 'A', 'E'],
+          answer: 0,
+          explain: 'Phase C is the test that traps the crowd.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'Phase B is where the operator builds the ___.',
+          options: ['cause', 'spring', 'trend'],
+          answer: 0,
+          explain: 'Cause & effect — phase B builds the cause for the move.',
+        },
+      ],
+    },
+    {
+      id: 'w-events',
+      title: 'Accumulation events',
+      teach: [
+        {
+          emoji: '🧩',
+          heading: 'The footprints to spot',
+          body: 'Selling Climax (SC) — panic low on huge volume. Automatic Rally (AR) — the bounce. Secondary Test (ST) — retest of the low. Sign of Strength (SOS) — a strong rally out. Last Point of Support (LPS) — the higher low before markup.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'match',
+          prompt: 'Match the event to its meaning.',
+          pairs: [
+            { a: 'Selling climax', b: 'Panic low, huge volume' },
+            { a: 'Sign of strength', b: 'Strong rally out of range' },
+            { a: 'Last point of support', b: 'Higher low before markup' },
+          ],
+          explain: 'SC = capitulation, SOS = strength, LPS = the launch pad.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'The Selling Climax is marked by…',
+          options: ['Panic selling on high volume', 'Quiet drifting', 'A single doji'],
+          answer: 0,
+          explain: 'Capitulation: maximum fear, maximum volume.',
+        },
+        {
+          kind: 'order',
+          prompt: 'Order these accumulation events (first → last).',
+          items: ['Selling climax', 'Spring', 'Sign of strength', 'Last point of support'],
+          explain: 'Capitulate, test, show strength, then the launch low.',
+        },
+      ],
+    },
   ],
 };
 
@@ -1116,5 +1191,156 @@ const FIB: Track = {
   ],
 };
 
+// ============================================================================
+// HARMONIC PATTERNS  (premium)
+// ============================================================================
+const HARMONIC: Track = {
+  id: 'harmonic',
+  title: 'Harmonic Patterns',
+  subtitle: 'Fibonacci geometry: Gartley, Bat, Butterfly',
+  icon: 'shapes',
+  color: '#9B59B6',
+  premium: true,
+  lessons: [
+    {
+      id: 'h-intro',
+      title: 'What are harmonics?',
+      teach: [
+        {
+          emoji: '🦋',
+          heading: 'Geometry meets Fibonacci',
+          body: 'Harmonic patterns are precise, Fibonacci-based reversal shapes drawn through 5 points (XABCD). Each leg must hit specific ratios, so they’re stricter than ordinary patterns — and they pinpoint a Potential Reversal Zone (PRZ).',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'choice',
+          prompt: 'Harmonic patterns are built on…',
+          options: ['Fibonacci ratios', 'Volume only', 'News events'],
+          answer: 0,
+          explain: 'Each leg must satisfy precise Fib ratios.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'The reversal area a harmonic points to is the ___.',
+          options: ['PRZ', 'RSI', 'MACD'],
+          answer: 0,
+          explain: 'PRZ = Potential Reversal Zone.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'Compared to normal chart patterns, harmonics are…',
+          options: ['Stricter (exact ratios)', 'Looser', 'Random'],
+          answer: 0,
+          explain: 'Exact ratios make them precise but pickier.',
+        },
+      ],
+    },
+    {
+      id: 'h-abcd',
+      title: 'The ABCD',
+      teach: [
+        {
+          emoji: '🔠',
+          heading: 'The simplest harmonic',
+          body: 'In an ABCD, the AB and CD legs are roughly equal. BC retraces 61.8–78.6% of AB, and CD is often a 127–161.8% extension of BC. Point D is the reversal.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'order',
+          prompt: 'Order the points of an ABCD (first → last).',
+          items: ['A', 'B', 'C', 'D'],
+          explain: 'AB leg, BC retrace, CD reversal leg ending at D.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'In an ABCD, the AB and CD legs are usually…',
+          options: ['Roughly equal', 'Wildly different', 'Always vertical'],
+          answer: 0,
+          explain: 'Symmetry: AB ≈ CD is the core of the pattern.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'The reversal occurs at point ___.',
+          options: ['D', 'A', 'B'],
+          answer: 0,
+          explain: 'D completes the pattern and marks the turn.',
+        },
+      ],
+    },
+    {
+      id: 'h-gartley',
+      title: 'The Gartley',
+      teach: [
+        {
+          emoji: '🅖',
+          heading: 'The classic XABCD',
+          body: 'In a Gartley, B retraces ~61.8% of the XA leg, and D completes near 78.6% of XA — a high-probability reversal with a tight stop just beyond X.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'choice',
+          prompt: 'In a Gartley, B retraces about ___ of XA.',
+          options: ['61.8%', '100%', '23.6%'],
+          answer: 0,
+          explain: 'The 0.618 B point defines the Gartley.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'The Gartley’s D point completes near ___% of XA.',
+          options: ['78.6', '161.8', '38.2'],
+          answer: 0,
+          explain: 'D ≈ 0.786 of XA is the Gartley’s reversal.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'A Gartley is a…',
+          options: ['Reversal pattern', 'Continuation pattern', 'Volume indicator'],
+          answer: 0,
+          explain: 'It points to a turn at the PRZ.',
+        },
+      ],
+    },
+    {
+      id: 'h-bat-butterfly',
+      title: 'Bat & Butterfly',
+      teach: [
+        {
+          emoji: '🦇',
+          heading: 'Deep vs extended',
+          body: 'The Bat completes D at ~88.6% of XA — deep, but still inside the move. The Butterfly extends D BEYOND X (~127% of XA), catching a reversal at a brand-new extreme.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'match',
+          prompt: 'Match the pattern to its D point.',
+          pairs: [
+            { a: 'Bat', b: 'D at ~88.6% of XA' },
+            { a: 'Butterfly', b: 'D beyond X (~127%)' },
+          ],
+          explain: 'Bat is deep-inside; Butterfly overshoots X.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'The Butterfly’s D point is…',
+          options: ['Beyond X (a new extreme)', 'Exactly at X', 'At point B'],
+          answer: 0,
+          explain: 'The Butterfly extends past X to ~1.27 of XA.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'A Bat completes near ___% of XA.',
+          options: ['88.6', '61.8', '50'],
+          answer: 0,
+          explain: 'The 0.886 D point is the Bat’s signature.',
+        },
+      ],
+    },
+  ],
+};
+
 export const FREE_EXTRA: Track[] = [CANDLES, PATTERNS, INDICATORS, MINDSET];
-export const PREMIUM_EXTRA: Track[] = [WYCKOFF, FIB];
+export const PREMIUM_EXTRA: Track[] = [WYCKOFF, FIB, HARMONIC];

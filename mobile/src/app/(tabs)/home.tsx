@@ -19,6 +19,7 @@ import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { TourTarget } from '@/features/tour/TourTarget';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { useMyCompetitions } from '@/store/competitions';
+import { useLessons } from '@/store/lessons';
 import { useTour } from '@/store/tour';
 import { useWallet } from '@/store/wallet';
 import { useThemeSync } from '@/store/theme';
@@ -40,6 +41,7 @@ export default function Home() {
   const celebrate = useCelebration((s) => s.celebrate);
   const router = useRouter();
   const myComps = useMyCompetitions((s) => s.mine);
+  const nextLesson = useLessons((s) => s.nextLesson());
   const activity = useActivity();
 
   // On the first login we run the coach-mark tour, then drop the daily diamond
@@ -116,6 +118,39 @@ export default function Home() {
           </View>
         </Card>
       </TourTarget>
+
+      {nextLesson ? (
+        <Pressable
+          onPress={() =>
+            router.push({ pathname: '/lesson/[id]', params: { id: nextLesson.lessonId } })
+          }
+        >
+          <Card style={{ marginTop: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 14,
+                backgroundColor: nextLesson.color + '22',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name={nextLesson.icon} size={24} color={nextLesson.color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Txt variant="tiny" color={colors.faint}>
+                LESSON OF THE DAY
+              </Txt>
+              <Txt variant="h3">{nextLesson.title}</Txt>
+              <Txt variant="small" color={colors.muted}>
+                {nextLesson.trackTitle}
+              </Txt>
+            </View>
+            <Icon name="play-circle" size={26} color={nextLesson.color} />
+          </Card>
+        </Pressable>
+      ) : null}
 
       <TourTarget id="home-duel" style={{ marginTop: spacing.lg }}>
         <Button
