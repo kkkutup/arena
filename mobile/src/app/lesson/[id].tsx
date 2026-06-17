@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Txt, Button, Icon, ProgressBar, Card } from '@/ui';
+import { Txt, Button, Icon, ProgressBar, Card } from '@/ui';
 import { getLesson } from '@/features/lessons/curriculum';
 import { ExerciseView } from '@/features/lessons/Exercises';
 import { LessonChart } from '@/features/lessons/LessonChart';
@@ -11,7 +12,6 @@ import { useLessons } from '@/store/lessons';
 import { useCelebration } from '@/store/celebration';
 import { useThemeSync } from '@/store/theme';
 import { colors, spacing, radius } from '@/theme/tokens';
-import { useWindowDimensions } from 'react-native';
 
 type Step = { type: 'teach'; card: TeachCard } | { type: 'ex'; ex: Exercise };
 
@@ -24,6 +24,7 @@ export default function LessonPlayer() {
 
   const addXp = useSession((s) => s.addXp);
   const completeLesson = useLessons((s) => s.complete);
+  const grantXp = useLessons((s) => s.grantXp);
   const celebrate = useCelebration((s) => s.celebrate);
 
   const steps: Step[] = useMemo(() => {
@@ -44,16 +45,25 @@ export default function LessonPlayer() {
   const exCount = found.lesson.exercises.length;
 
   const doFinish = () => {
-    const xp = correctRef.current * 5 + 10;
-    addXp(xp);
+    // Full value = 5 XP per correct + a 10 XP bonus only on a flawless run.
+    // grantXp pays just the delta over what this lesson already earned.
+    const perfect = correctRef.current === exCount;
+    const value = correctRef.current * 5 + (perfect ? 10 : 0);
+    const delta = grantXp(id, value);
+    if (delta > 0) addXp(delta);
     completeLesson(id);
-    setAwarded(xp);
+    setAwarded(delta);
     setFinished(true);
     celebrate({
-      icon: 'school',
-      color: colors.up,
-      title: `+${xp} XP`,
-      subtitle: 'Lesson complete — keep the streak going!',
+      icon: perfect ? 'trophy' : 'school',
+      color: delta > 0 ? colors.up : colors.muted,
+      title: delta > 0 ? `+${delta} XP` : 'Reviewed!',
+      subtitle:
+        delta > 0
+          ? perfect
+            ? 'Flawless — full XP earned!'
+            : 'Nice — redo it perfectly to top up the XP.'
+          : 'You’ve already earned the XP for this lesson.',
     });
   };
 
@@ -69,39 +79,44 @@ export default function LessonPlayer() {
   if (finished) {
     const acc = exCount ? Math.round((correctRef.current / exCount) * 100) : 100;
     return (
-      <Screen>
-        <View style={{ alignItems: 'center', gap: spacing.md, marginTop: spacing.xxxl }}>
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: colors.bg }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg }}>
           <View
             style={{
               width: 96,
               height: 96,
               borderRadius: radius.pill,
-              backgroundColor: colors.upTint,
+              backgroundColor: acc === 100 ? colors.upTint : colors.surfaceAlt,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Icon name="trophy" size={48} color={colors.up} />
+            <Icon name="trophy" size={48} color={acc === 100 ? colors.up : colors.gold} />
           </View>
           <Txt variant="title" center>
             Lesson complete!
           </Txt>
           <Card flat style={{ flexDirection: 'row', gap: spacing.xxl, backgroundColor: colors.surfaceAlt }}>
-            <Stat label="XP earned" value={`+${awarded}`} color={colors.primary} />
+            <Stat label="XP earned" value={`+${awarded}`} color={awarded > 0 ? colors.primary : colors.muted} />
             <Stat label="Accuracy" value={`${acc}%`} color={acc >= 80 ? colors.up : colors.ink} />
           </Card>
+          {awarded === 0 ? (
+            <Txt variant="small" color={colors.muted} center>
+              Already earned — replays don’t pay XP again.
+            </Txt>
+          ) : null}
           <Button label="Continue" variant="success" full style={{ marginTop: spacing.lg }} onPress={() => router.back()} />
         </View>
-      </Screen>
+      </SafeAreaView>
     );
   }
 
   const current = steps[step];
 
   return (
-    <Screen>
+    <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* top bar: close + progress */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingTop: spacing.sm }}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Icon name="close" size={26} color={colors.faint} />
         </Pressable>
@@ -110,29 +125,34 @@ export default function LessonPlayer() {
         </View>
       </View>
 
-      <View style={{ marginTop: spacing.xl }}>
-        {current.type === 'teach' ? (
-          <View style={{ gap: spacing.md }}>
-            {current.card.emoji ? <Txt variant="display">{current.card.emoji}</Txt> : null}
-            <Txt variant="title">{current.card.heading}</Txt>
-            {current.card.chart ? (
-              <LessonChart
-                candles={current.card.chart.candles}
-                markers={current.card.chart.markers}
-                width={width - spacing.lg * 2}
-                height={170}
-              />
-            ) : null}
-            <Txt variant="body" color={colors.muted}>
-              {current.card.body}
-            </Txt>
-            <Button label="Continue" full style={{ marginTop: spacing.md }} onPress={advance} />
-          </View>
-        ) : (
+      {current.type === 'teach' ? (
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg, gap: spacing.md }}>
+          {current.card.emoji ? <Txt variant="display">{current.card.emoji}</Txt> : null}
+          <Txt variant="title">{current.card.heading}</Txt>
+          {current.card.chart ? (
+            <LessonChart
+              candles={current.card.chart.candles}
+              markers={current.card.chart.markers}
+              zone={current.card.chart.zone}
+              width={width - spacing.lg * 2}
+              height={190}
+            />
+          ) : null}
+          <Txt variant="body" color={colors.muted}>
+            {current.card.body}
+          </Txt>
+          <Button label="Continue" full style={{ marginTop: spacing.md }} onPress={advance} />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: spacing.lg }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <ExerciseView key={step} ex={current.ex} onDone={onExercise} />
-        )}
-      </View>
-    </Screen>
+        </ScrollView>
+      )}
+    </SafeAreaView>
   );
 }
 

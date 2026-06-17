@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { View } from 'react-native';
 import Svg, { Rect, Line } from 'react-native-svg';
 import { Txt } from '@/ui';
-import type { SimpleCandle, ChartMarker } from './types';
+import type { SimpleCandle, ChartMarker, ChartZone } from './types';
 import { colors, radius } from '@/theme/tokens';
 
 // Renders a small candle series with optional labelled marker bands (A/B/C…)
@@ -11,6 +11,7 @@ import { colors, radius } from '@/theme/tokens';
 export function LessonChart({
   candles,
   markers,
+  zone,
   width,
   height,
   selected,
@@ -19,6 +20,7 @@ export function LessonChart({
 }: {
   candles: SimpleCandle[];
   markers?: ChartMarker[];
+  zone?: ChartZone;
   width: number;
   height: number;
   selected?: string;
@@ -34,6 +36,10 @@ export function LessonChart({
   for (const k of candles) {
     if (k.h > max) max = k.h;
     if (k.l < min) min = k.l;
+  }
+  if (zone) {
+    if (zone.high > max) max = zone.high;
+    if (zone.low < min) min = zone.low;
   }
   const range = max - min || 1;
   const n = candles.length;
@@ -51,6 +57,20 @@ export function LessonChart({
   return (
     <View style={{ width, height }}>
       <Svg width={width} height={height}>
+        {/* highlight zone (e.g. an order block) */}
+        {zone ? (
+          <Rect
+            x={zone.from * slot}
+            y={y(zone.high)}
+            width={(zone.to - zone.from + 1) * slot}
+            height={Math.max(4, y(zone.low) - y(zone.high))}
+            fill={zone.color ?? colors.primary}
+            opacity={0.16}
+            stroke={zone.color ?? colors.primary}
+            strokeWidth={1.2}
+            rx={4}
+          />
+        ) : null}
         {/* marker bands */}
         {(markers ?? []).map((m) => {
           const col = bandColor(m.label);
@@ -108,6 +128,29 @@ export function LessonChart({
           </View>
         </View>
       ))}
+      {/* zone label */}
+      {zone ? (
+        <View
+          style={{
+            position: 'absolute',
+            left: zone.from * slot + 4,
+            top: Math.max(2, y(zone.high) - 10),
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: zone.color ?? colors.primary,
+              borderRadius: radius.sm,
+              paddingHorizontal: 7,
+              paddingVertical: 1,
+            }}
+          >
+            <Txt variant="tiny" color={colors.white}>
+              {zone.label}
+            </Txt>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

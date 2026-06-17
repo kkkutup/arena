@@ -16,7 +16,13 @@ export interface NextLesson {
 // the lesson player — which feeds the streak + global ranking.
 interface LessonsState {
   completed: Record<string, true>;
+  // Highest XP value already credited for a lesson. Replays only ever pay the
+  // *delta* up to the lesson's max — so a perfect redo tops you up, but you can
+  // never farm the same lesson twice.
+  awarded: Record<string, number>;
   complete: (lessonId: string) => void;
+  // Returns the XP to actually grant now (0 if no improvement over before).
+  grantXp: (lessonId: string, value: number) => number;
   isDone: (lessonId: string) => boolean;
   trackProgress: (trackId: string) => { done: number; total: number };
   // Sequential unlock: first lesson, or the previous one is done.
@@ -28,8 +34,17 @@ interface LessonsState {
 
 export const useLessons = create<LessonsState>((set, get) => ({
   completed: {},
+  awarded: {},
 
   complete: (lessonId) => set((s) => ({ completed: { ...s.completed, [lessonId]: true } })),
+
+  grantXp: (lessonId, value) => {
+    const prev = get().awarded[lessonId] ?? 0;
+    const next = Math.max(prev, value);
+    const delta = next - prev;
+    if (delta > 0) set((s) => ({ awarded: { ...s.awarded, [lessonId]: next } }));
+    return delta;
+  },
 
   isDone: (lessonId) => !!get().completed[lessonId],
 
@@ -69,5 +84,5 @@ export const useLessons = create<LessonsState>((set, get) => ({
     return null;
   },
 
-  reset: () => set({ completed: {} }),
+  reset: () => set({ completed: {}, awarded: {} }),
 }));

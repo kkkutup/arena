@@ -11,9 +11,19 @@ export interface ChartMarker {
   index: number; // candle index the marker band sits on
   label: string; // 'A' | 'B' | 'C' …
 }
+// A highlighted price box (e.g. an order block / supply zone) for illustrations.
+export interface ChartZone {
+  from: number; // start candle index
+  to: number; // end candle index (inclusive)
+  low: number;
+  high: number;
+  label: string;
+  color?: string;
+}
 export interface ChartSpec {
   candles: SimpleCandle[];
   markers?: ChartMarker[];
+  zone?: ChartZone;
 }
 
 // ---- Teaching cards (shown before the exercises) ----

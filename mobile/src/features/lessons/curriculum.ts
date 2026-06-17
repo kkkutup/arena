@@ -404,9 +404,19 @@ const ICT: Track = {
       title: 'Order blocks',
       teach: [
         {
-          emoji: '🏦',
           heading: 'Footprints of big orders',
-          body: 'An order block is the last opposite candle before a strong institutional move — e.g. the last down candle before a sharp rally. Price often returns to it before continuing.',
+          body: 'An order block is the last opposite candle before a strong institutional move — here, the last down candle before the rally. Price often returns to this zone before continuing higher.',
+          chart: {
+            candles: [
+              c(110, 111, 108, 109),
+              c(109, 110, 106, 107),
+              c(107, 108, 103, 104),
+              c(104, 114, 103, 113),
+              c(113, 116, 112, 115),
+              c(115, 117, 113, 116),
+            ],
+            zone: { from: 2, to: 5, low: 103, high: 108, label: 'Order block' },
+          },
         },
       ],
       exercises: [

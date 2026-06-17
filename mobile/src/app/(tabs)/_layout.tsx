@@ -16,15 +16,24 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.faint,
-        // A plain themed View as the bar background is the most reliable way to
-        // recolor it (tabBarStyle.backgroundColor can lag a night-mode toggle).
+        // A plain themed View as the bar background — including its top border —
+        // is the most reliable way to recolor it. The default tabBarStyle border
+        // + Android elevation render a stale white hairline, so we disable them.
         tabBarBackground: () => (
-          <View style={{ flex: 1, backgroundColor: colors.surface }} />
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: colors.surface,
+              borderTopWidth: 1.5,
+              borderTopColor: colors.line,
+            }}
+          />
         ),
         tabBarStyle: {
           backgroundColor: 'transparent',
-          borderTopColor: colors.line,
-          borderTopWidth: 1.5,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
           height: Platform.OS === 'ios' ? 88 : 66,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 8,
