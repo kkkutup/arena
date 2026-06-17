@@ -22,7 +22,10 @@ const MIN_PCT = 0.5;
 const MAX_PCT = 12;
 const STEP = 0.5;
 
+import { useThemeSync } from '@/store/theme';
+
 export default function Backtest() {
+  useThemeSync();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const addXp = useSession((s) => s.addXp);

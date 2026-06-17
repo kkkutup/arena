@@ -4,7 +4,9 @@ import { Platform, type TextStyle, type ViewStyle } from 'react-native';
 // Brand color (violet) is kept distinct from market up/down (green/red) so P&L
 // colors never clash with brand UI.
 
-export const colors = {
+// Brand + semantic hues are shared; only neutrals/tints differ between themes.
+// `night` is an always-dark surface (e.g. premium hero) that ignores the theme.
+const lightColors = {
   // brand
   primary: '#6C5CE7',
   primaryDark: '#5646C4', // darker bottom edge for the "3D" chunky button
@@ -33,13 +35,39 @@ export const colors = {
   surfaceAlt: '#F5F6FB',
   bg: '#FFFFFF',
   white: '#FFFFFF',
+  night: '#16161F',
 
   // division tiers
   bronze: '#CD7F32',
   silver: '#9AA4B2',
   goldTier: '#F2B705',
   diamond: '#41C7E8',
-} as const;
+};
+
+const darkColors: typeof lightColors = {
+  ...lightColors,
+  primaryTint: '#272140',
+  upTint: '#11271F',
+  downTint: '#2E1B20',
+  ink: '#F1F2F7',
+  muted: '#9CA0AE',
+  faint: '#6B6E7D',
+  line: '#2A2A36',
+  surface: '#191921',
+  surfaceAlt: '#23232E',
+  bg: '#0F0F15',
+  // `white` and `night` stay fixed (used for on-color text / always-dark cards).
+};
+
+export type ThemeMode = 'light' | 'dark';
+
+// Live, mutable palette. Components read `colors.x` at render; `applyTheme`
+// mutates it in place and the theme store forces a re-render so values refresh.
+export const colors = { ...lightColors };
+
+export function applyTheme(mode: ThemeMode): void {
+  Object.assign(colors, mode === 'dark' ? darkColors : lightColors);
+}
 
 export const spacing = {
   xs: 4,

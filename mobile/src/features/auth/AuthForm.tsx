@@ -7,11 +7,13 @@ import { useSession } from '@/store/session';
 import { signInWithGoogle } from '@/lib/google';
 import { googleConfigured } from '@/lib/auth-config';
 import { authApi } from '@/api/auth';
+import { useThemeSync } from '@/store/theme';
 import { colors, spacing } from '@/theme/tokens';
 
 type Method = 'apple' | 'email';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
+  useThemeSync();
   const router = useRouter();
   const signInWith = useSession((s) => s.signInWith);
   const setSession = useSession((s) => s.setSession);

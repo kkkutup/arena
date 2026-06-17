@@ -5,9 +5,11 @@ import { Screen, Txt, Card, Button, TextField, EmptyState } from '@/ui';
 import { useFriends, useSuggested } from '@/hooks/queries';
 import { FriendRow } from '@/features/social/FriendRow';
 import { useIsFresh } from '@/hooks/useIsFresh';
+import { useThemeSync } from '@/store/theme';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function Social() {
+  useThemeSync();
   const fresh = useIsFresh();
   const friends = useFriends();
   const suggested = useSuggested();

@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CelebrationOverlay } from '@/ui';
 import { TourOverlay } from '@/features/tour/TourOverlay';
 import { DiamondStoreSheet } from '@/features/wallet/DiamondStoreSheet';
+import { useThemeSync } from '@/store/theme';
+import { colors } from '@/theme/tokens';
 import {
   useFonts,
   Nunito_400Regular,
@@ -24,6 +26,7 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+  const mode = useThemeSync();
   const [fontsLoaded] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -39,11 +42,16 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }} />
+          <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+            }}
+          />
           <CelebrationOverlay />
           <TourOverlay />
           <DiamondStoreSheet />

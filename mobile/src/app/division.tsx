@@ -4,10 +4,12 @@ import { Screen, Txt, Icon } from '@/ui';
 import { useDivision } from '@/hooks/queries';
 import { tierMeta } from '@/features/competitions/util';
 import { LeaderboardList } from '@/features/competitions/LeaderboardList';
+import { useThemeSync } from '@/store/theme';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { timeLeft } from '@/lib/format';
 
 export default function DivisionScreen() {
+  useThemeSync();
   const router = useRouter();
   const { data: div } = useDivision();
 

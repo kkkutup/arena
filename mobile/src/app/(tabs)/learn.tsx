@@ -1,10 +1,12 @@
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Card, Icon, Button } from '@/ui';
+import { useThemeSync } from '@/store/theme';
 import { colors, spacing, radius } from '@/theme/tokens';
 
 // Learn hub: a free, playable Backtest challenge now; premium Lessons later.
 export default function Learn() {
+  useThemeSync();
   const router = useRouter();
 
   return (
@@ -61,8 +63,8 @@ export default function Learn() {
       <Card
         flat
         style={{
-          backgroundColor: colors.ink,
-          borderColor: colors.ink,
+          backgroundColor: colors.night,
+          borderColor: colors.night,
           alignItems: 'center',
           paddingVertical: spacing.xl,
           marginTop: spacing.lg,

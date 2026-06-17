@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Txt, Button, Icon } from '@/ui';
 import type { IconName } from '@/ui/Icon';
+import { useThemeSync } from '@/store/theme';
 import { colors, spacing, radius } from '@/theme/tokens';
 
 const SLIDES: { icon: IconName; color: string; title: string; body: string }[] = [
@@ -35,6 +36,7 @@ const SLIDES: { icon: IconName; color: string; title: string; body: string }[] =
 ];
 
 export default function Onboarding() {
+  useThemeSync();
   const { width } = useWindowDimensions();
   const router = useRouter();
   const [page, setPage] = useState(0);
@@ -43,7 +45,7 @@ export default function Onboarding() {
     setPage(Math.round(e.nativeEvent.contentOffset.x / width));
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <ScrollView
         horizontal
         pagingEnabled

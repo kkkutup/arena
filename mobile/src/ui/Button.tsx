@@ -13,16 +13,16 @@ import { colors, fonts, radius, spacing } from '@/theme/tokens';
 type Variant = 'primary' | 'success' | 'danger' | 'neutral' | 'outline';
 type Size = 'lg' | 'md' | 'sm';
 
-const VARIANTS: Record<
-  Variant,
-  { bg: string; edge: string; text: string; border?: string }
-> = {
-  primary: { bg: colors.primary, edge: colors.primaryDark, text: colors.white },
-  success: { bg: colors.up, edge: colors.upDark, text: colors.white },
-  danger: { bg: colors.down, edge: colors.downDark, text: colors.white },
-  neutral: { bg: colors.surfaceAlt, edge: colors.line, text: colors.ink },
-  outline: { bg: colors.white, edge: colors.line, text: colors.ink, border: colors.line },
-};
+// Built per-render (not module-level) so it reflects the live theme palette.
+function variants(): Record<Variant, { bg: string; edge: string; text: string; border?: string }> {
+  return {
+    primary: { bg: colors.primary, edge: colors.primaryDark, text: colors.white },
+    success: { bg: colors.up, edge: colors.upDark, text: colors.white },
+    danger: { bg: colors.down, edge: colors.downDark, text: colors.white },
+    neutral: { bg: colors.surfaceAlt, edge: colors.line, text: colors.ink },
+    outline: { bg: colors.surface, edge: colors.line, text: colors.ink, border: colors.line },
+  };
+}
 
 const SIZES: Record<Size, { h: number; font: number; px: number }> = {
   lg: { h: 56, font: 17, px: 24 },
@@ -58,7 +58,7 @@ export function Button({
   style,
 }: ButtonProps) {
   const [pressed, setPressed] = useState(false);
-  const v = VARIANTS[variant];
+  const v = variants()[variant];
   const s = SIZES[size];
   const isDisabled = disabled || loading;
   const sideBorder = v.border ? 1.5 : 0;

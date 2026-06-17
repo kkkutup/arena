@@ -35,7 +35,10 @@ function synthRows(comp: Competition, me: User | null): LeaderboardRow[] {
   return rows;
 }
 
+import { useThemeSync } from '@/store/theme';
+
 export default function CompetitionDetail() {
+  useThemeSync();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   // A competition the user just created/joined lives in the client store;

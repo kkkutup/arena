@@ -1,19 +1,23 @@
-import { View, Pressable } from 'react-native';
+import { View, Pressable, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Avatar, Button, Card, StreakFlame, Icon } from '@/ui';
 import { useSession } from '@/store/session';
 import { useWallet } from '@/store/wallet';
+import { useTheme, useThemeSync } from '@/store/theme';
 import { AchievementGrid } from '@/features/profile/AchievementGrid';
 import { useIsFresh } from '@/hooks/useIsFresh';
 import { colors, spacing, radius } from '@/theme/tokens';
 
 export default function Profile() {
+  useThemeSync();
   const router = useRouter();
   const user = useSession((s) => s.user);
   const signOut = useSession((s) => s.signOut);
   const fresh = useIsFresh();
   const balance = useWallet((s) => s.balance);
   const openStore = useWallet((s) => s.openStore);
+  const mode = useTheme((s) => s.mode);
+  const toggleTheme = useTheme((s) => s.toggle);
 
   if (!user) return null;
 
@@ -58,6 +62,36 @@ export default function Profile() {
           <Icon name="chevron-forward" size={22} color={colors.faint} />
         </Card>
       </Pressable>
+
+      <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
+        Settings
+      </Txt>
+      <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: radius.md,
+            backgroundColor: colors.surfaceAlt,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name={mode === 'dark' ? 'moon' : 'sunny'} size={22} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Txt variant="bodyBold">Night mode</Txt>
+          <Txt variant="small" color={colors.muted}>
+            {mode === 'dark' ? 'On — easy on the eyes' : 'Off'}
+          </Txt>
+        </View>
+        <Switch
+          value={mode === 'dark'}
+          onValueChange={toggleTheme}
+          trackColor={{ true: colors.primary, false: colors.line }}
+          thumbColor={colors.white}
+        />
+      </Card>
 
       <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
         Achievements

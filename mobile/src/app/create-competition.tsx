@@ -23,7 +23,10 @@ const DURATIONS = [
 const BALANCES = [10000, 50000, 100000];
 const LEVS = [5, 10, 20, 50];
 
+import { useThemeSync } from '@/store/theme';
+
 export default function CreateCompetition() {
+  useThemeSync();
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState<CompetitionType>('PRIVATE_LEAGUE');

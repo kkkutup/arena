@@ -21,6 +21,7 @@ import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { useMyCompetitions } from '@/store/competitions';
 import { useTour } from '@/store/tour';
 import { useWallet } from '@/store/wallet';
+import { useThemeSync } from '@/store/theme';
 import { useCelebration } from '@/store/celebration';
 import { HOME_TOUR } from '@/features/tour/steps';
 import type { ActivityItem } from '@/api/types';
@@ -31,6 +32,7 @@ const DAILY_GOAL_XP = 60;
 const DAILY_DONE = 38;
 
 export default function Home() {
+  useThemeSync();
   const user = useSession((s) => s.user);
   const tourSeen = useSession((s) => s.tourSeen);
   const markTourSeen = useSession((s) => s.markTourSeen);

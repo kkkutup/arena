@@ -6,12 +6,14 @@ import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { tierMeta } from '@/features/competitions/util';
 import { useMyCompetitions } from '@/store/competitions';
+import { useThemeSync } from '@/store/theme';
 import { useIsFresh } from '@/hooks/useIsFresh';
 import type { Division } from '@/api/types';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { timeLeft } from '@/lib/format';
 
 export default function Compete() {
+  useThemeSync();
   const router = useRouter();
   const fresh = useIsFresh();
   const pub = usePublicCompetitions();

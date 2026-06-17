@@ -21,7 +21,10 @@ function changePct(candles: Candle[]): number {
   return ((candles[candles.length - 1].close - first) / first) * 100;
 }
 
+import { useThemeSync } from '@/store/theme';
+
 export default function Sandbox() {
+  useThemeSync();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const engine = usePriceEngine();

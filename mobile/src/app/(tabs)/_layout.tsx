@@ -1,9 +1,11 @@
 import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Icon } from '@/ui';
+import { useThemeSync } from '@/store/theme';
 import { colors, fonts } from '@/theme/tokens';
 
 export default function TabsLayout() {
+  useThemeSync();
   return (
     <Tabs
       screenOptions={{

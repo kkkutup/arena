@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Txt, Button, TextField, Avatar } from '@/ui';
 import { useSession } from '@/store/session';
+import { useThemeSync } from '@/store/theme';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function ProfileSetup() {
+  useThemeSync();
   const router = useRouter();
   const completeProfile = useSession((s) => s.completeProfile);
   const [username, setUsername] = useState('');

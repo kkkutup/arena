@@ -7,7 +7,10 @@ import { useWallet, DIAMOND } from '@/store/wallet';
 import { useMyCompetitions } from '@/store/competitions';
 import { colors, spacing } from '@/theme/tokens';
 
+import { useThemeSync } from '@/store/theme';
+
 export default function Join() {
+  useThemeSync();
   const router = useRouter();
   const [code, setCode] = useState('');
   const valid = code.trim().length >= 4;
