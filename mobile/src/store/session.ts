@@ -4,6 +4,7 @@ import type { AuthSession } from '@/api/auth';
 import { useWallet } from '@/store/wallet';
 import { useMyCompetitions } from '@/store/competitions';
 import { useTrade } from '@/store/trade';
+import { useLessons } from '@/store/lessons';
 import { DAILY_GOAL_XP } from '@/lib/goals';
 
 type AuthMethod = 'google' | 'apple' | 'email';
@@ -124,6 +125,7 @@ export const useSession = create<SessionState>((set) => ({
     useWallet.getState().reset();
     useMyCompetitions.getState().reset();
     useTrade.getState().resetAll();
+    useLessons.getState().reset();
     set({
       user: null,
       accessToken: null,
