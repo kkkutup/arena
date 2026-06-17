@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Icon } from '@/ui';
 import { useThemeSync } from '@/store/theme';
@@ -16,8 +16,13 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.faint,
+        // A plain themed View as the bar background is the most reliable way to
+        // recolor it (tabBarStyle.backgroundColor can lag a night-mode toggle).
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: colors.surface }} />
+        ),
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: 'transparent',
           borderTopColor: colors.line,
           borderTopWidth: 1.5,
           height: Platform.OS === 'ios' ? 88 : 66,

@@ -26,76 +26,111 @@ export interface ClosedTrade {
   at: number;
 }
 
-interface TradeState {
+// One trading account PER competition (keyed by competition id). Each starts
+// fresh at the competition's starting balance, so P&L never bleeds between
+// competitions. ('practice' is the key for the standalone sandbox.)
+export interface Account {
   startingBalance: number;
   cashBalance: number;
   positions: OpenPosition[];
   history: ClosedTrade[];
-  open: (a: { symbol: string; side: Side; qty: number; leverage: number; price: number }) => string | null;
-  close: (id: string, price: number) => void;
-  settleLiquidation: (id: string) => void;
-  reset: () => void;
 }
 
-const STARTING = 100000;
+interface TradeState {
+  accounts: Record<string, Account>;
+  ensure: (key: string, startingBalance: number) => void;
+  open: (
+    key: string,
+    a: { symbol: string; side: Side; qty: number; leverage: number; price: number },
+  ) => string | null;
+  close: (key: string, id: string, price: number) => void;
+  settleLiquidation: (key: string, id: string) => void;
+  resetAll: () => void;
+}
+
 let counter = 0;
 
-export const useTrade = create<TradeState>((set, get) => ({
-  startingBalance: STARTING,
-  cashBalance: STARTING,
+const blank = (startingBalance: number): Account => ({
+  startingBalance,
+  cashBalance: startingBalance,
   positions: [],
   history: [],
+});
 
-  open: ({ symbol, side, qty, leverage, price }) => {
-    if (!(qty > 0) || !(price > 0)) return null;
+export const useTrade = create<TradeState>((set, get) => ({
+  accounts: {},
+
+  ensure: (key, startingBalance) =>
+    set((st) =>
+      st.accounts[key] ? st : { accounts: { ...st.accounts, [key]: blank(startingBalance) } },
+    ),
+
+  open: (key, { symbol, side, qty, leverage, price }) => {
+    const acct = get().accounts[key];
+    if (!acct || !(qty > 0) || !(price > 0)) return null;
     const margin = marginRequired(qty, price, leverage);
-    const used = get().positions.reduce((s, p) => s + p.margin, 0);
-    if (margin > get().cashBalance - used + 1e-9) return null; // insufficient free margin
+    const used = acct.positions.reduce((s, p) => s + p.margin, 0);
+    if (margin > acct.cashBalance - used + 1e-9) return null; // insufficient free margin
     const id = `pos_${++counter}`;
+    const pos: OpenPosition = {
+      id,
+      symbol,
+      side,
+      qty,
+      leverage,
+      entryPrice: price,
+      margin,
+      liquidationPrice: liquidationPrice(side, price, leverage),
+      openedAt: Date.now(),
+    };
     set((st) => ({
-      positions: [
-        {
-          id,
-          symbol,
-          side,
-          qty,
-          leverage,
-          entryPrice: price,
-          margin,
-          liquidationPrice: liquidationPrice(side, price, leverage),
-          openedAt: Date.now(),
-        },
-        ...st.positions,
-      ],
+      accounts: {
+        ...st.accounts,
+        [key]: { ...st.accounts[key], positions: [pos, ...st.accounts[key].positions] },
+      },
     }));
     return id;
   },
 
-  close: (id, price) =>
+  close: (key, id, price) =>
     set((st) => {
-      const pos = st.positions.find((p) => p.id === id);
-      if (!pos) return st;
+      const acct = st.accounts[key];
+      const pos = acct?.positions.find((p) => p.id === id);
+      if (!acct || !pos) return st;
       const pnl = unrealizedPnl(pos.side, pos.qty, pos.entryPrice, price);
       return {
-        cashBalance: st.cashBalance + pnl,
-        positions: st.positions.filter((p) => p.id !== id),
-        history: [toClosed(pos, price, pnl, false), ...st.history],
+        accounts: {
+          ...st.accounts,
+          [key]: {
+            ...acct,
+            cashBalance: acct.cashBalance + pnl,
+            positions: acct.positions.filter((p) => p.id !== id),
+            history: [toClosed(pos, price, pnl, false), ...acct.history],
+          },
+        },
       };
     }),
 
-  settleLiquidation: (id) =>
+  settleLiquidation: (key, id) =>
     set((st) => {
-      const pos = st.positions.find((p) => p.id === id);
-      if (!pos) return st;
+      const acct = st.accounts[key];
+      const pos = acct?.positions.find((p) => p.id === id);
+      if (!acct || !pos) return st;
       const pnl = unrealizedPnl(pos.side, pos.qty, pos.entryPrice, pos.liquidationPrice);
       return {
-        cashBalance: st.cashBalance + pnl,
-        positions: st.positions.filter((p) => p.id !== id),
-        history: [toClosed(pos, pos.liquidationPrice, pnl, true), ...st.history],
+        accounts: {
+          ...st.accounts,
+          [key]: {
+            ...acct,
+            cashBalance: acct.cashBalance + pnl,
+            positions: acct.positions.filter((p) => p.id !== id),
+            history: [toClosed(pos, pos.liquidationPrice, pnl, true), ...acct.history],
+          },
+        },
       };
     }),
 
-  reset: () => set({ cashBalance: STARTING, positions: [], history: [] }),
+  resetAll: () => set({ accounts: {} }),
 }));
 
 function toClosed(p: OpenPosition, closePrice: number, pnl: number, liquidated: boolean): ClosedTrade {

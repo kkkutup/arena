@@ -54,6 +54,9 @@ export const useMyCompetitions = create<CompetitionsState>((set, get) => ({
   },
 
   joinByCode: (code) => {
+    // If the code matches a competition you already have, open that one.
+    const existing = get().mine.find((c) => c.joinCode?.toUpperCase() === code.toUpperCase());
+    if (existing) return existing;
     const now = Date.now();
     const c: Competition = {
       id: `uc_${now}`,

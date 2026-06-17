@@ -64,7 +64,7 @@ function makeInitial(): PriceEngine {
 // (not in-place mutation) and stores them in state, so the chart, price, and
 // live P&L all re-render — even under React's compiler memoization, which would
 // otherwise serve a stale value from a ref whose identity never changes.
-export function usePriceEngine(): PriceEngine {
+export function usePriceEngine(accountKey: string): PriceEngine {
   const dataRef = useRef<PriceEngine | null>(null);
   if (!dataRef.current) dataRef.current = makeInitial();
 
@@ -101,17 +101,19 @@ export function usePriceEngine(): PriceEngine {
       const nextEngine: PriceEngine = { prices, candles };
       dataRef.current = nextEngine;
 
-      // Liquidation sweep — side effect, safe here outside the render path.
-      for (const p of useTrade.getState().positions) {
+      // Liquidation sweep for this competition's account — side effect, safe
+      // here outside the render path.
+      const acct = useTrade.getState().accounts[accountKey];
+      for (const p of acct?.positions ?? []) {
         if (isLiquidated(p.side, p.liquidationPrice, prices[p.symbol])) {
-          settleLiquidation(p.id);
+          settleLiquidation(accountKey, p.id);
         }
       }
 
       setEngine(nextEngine);
     }, TICK_MS);
     return () => clearInterval(id);
-  }, [settleLiquidation]);
+  }, [settleLiquidation, accountKey]);
 
   return engine;
 }

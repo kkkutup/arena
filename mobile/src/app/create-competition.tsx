@@ -10,10 +10,22 @@ import { colors, spacing, radius } from '@/theme/tokens';
 import { fmtUsd } from '@/lib/format';
 import type { CompetitionType } from '@/api/types';
 
-const TYPES: { key: CompetitionType; label: string }[] = [
-  { key: 'PRIVATE_LEAGUE', label: 'League' },
-  { key: 'DUEL', label: 'Duel' },
-  { key: 'PUBLIC_DIVISION', label: 'Public' },
+const TYPES: { key: CompetitionType; label: string; desc: string }[] = [
+  {
+    key: 'PRIVATE_LEAGUE',
+    label: 'League',
+    desc: 'Private group you invite with a code. Everyone trades the same markets — highest return over the duration wins.',
+  },
+  {
+    key: 'DUEL',
+    label: 'Duel',
+    desc: 'Head-to-head 1-on-1. Challenge a single friend; the better return takes the bragging rights.',
+  },
+  {
+    key: 'PUBLIC_DIVISION',
+    label: 'Public',
+    desc: 'Open to everyone in your division. Climb the public leaderboard and earn promotion to the next tier.',
+  },
 ];
 const DURATIONS = [
   { label: '1 day', h: 24 },
@@ -78,6 +90,21 @@ export default function CreateCompetition() {
             <Chip key={t.key} label={t.label} active={type === t.key} onPress={() => setType(t.key)} />
           ))}
         </Field>
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: spacing.sm,
+            backgroundColor: colors.surfaceAlt,
+            borderRadius: radius.md,
+            padding: spacing.md,
+            marginTop: -spacing.sm,
+          }}
+        >
+          <Icon name="information-circle" size={18} color={colors.primary} />
+          <Txt variant="small" color={colors.muted} style={{ flex: 1 }}>
+            {TYPES.find((t) => t.key === type)?.desc}
+          </Txt>
+        </View>
 
         <Field label="Markets">
           {INSTRUMENTS.map((i) => (

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -23,15 +23,28 @@ export function DiamondStoreSheet() {
   const insets = useSafeAreaInsets();
 
   const slide = useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = useState(open);
+
+  // Spring in, fade/slide out, and keep mounted through the exit animation so
+  // it never pops — the abrupt mount/unmount was the choppy part.
   useEffect(() => {
-    Animated.timing(slide, {
-      toValue: open ? 1 : 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
+    if (open) {
+      setMounted(true);
+      Animated.spring(slide, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 22,
+        stiffness: 220,
+        mass: 0.8,
+      }).start();
+    } else {
+      Animated.timing(slide, { toValue: 0, duration: 190, useNativeDriver: true }).start(
+        ({ finished }) => finished && setMounted(false),
+      );
+    }
   }, [open, slide]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   const watchAd = () => {
     // Stub: a real rewarded ad (AdMob) grants on completion. For now, grant now.
@@ -39,11 +52,13 @@ export function DiamondStoreSheet() {
     add(DIAMOND.AD_REWARD);
   };
 
-  const translateY = slide.interpolate({ inputRange: [0, 1], outputRange: [400, 0] });
+  const translateY = slide.interpolate({ inputRange: [0, 1], outputRange: [460, 0] });
 
   return (
     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(13,13,24,0.5)' }} onPress={close} />
+      <Pressable style={{ flex: 1 }} onPress={close}>
+        <Animated.View style={{ flex: 1, backgroundColor: 'rgba(13,13,24,0.55)', opacity: slide }} />
+      </Pressable>
       <Animated.View
         style={{
           backgroundColor: colors.surface,

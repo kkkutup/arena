@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, ScrollView, Pressable, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Card, Icon } from '@/ui';
 import { colors, spacing, radius } from '@/theme/tokens';
@@ -28,17 +28,30 @@ export default function Sandbox() {
   useThemeSync();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const engine = usePriceEngine();
+  // Each competition trades on its own account (fresh balance). `cid` + `start`
+  // come from the competition's "Open trade sandbox" button.
+  const { cid, start } = useLocalSearchParams<{ cid?: string; start?: string }>();
+  const acctKey = cid ?? 'practice';
+  const startBal = Number(start) || 100000;
+
+  const engine = usePriceEngine(acctKey);
   const [symbol, setSymbol] = useState(INSTRUMENTS[0].symbol);
 
-  const positions = useTrade((s) => s.positions);
-  const cashBalance = useTrade((s) => s.cashBalance);
-  const startingBalance = useTrade((s) => s.startingBalance);
-  const history = useTrade((s) => s.history);
+  const ensure = useTrade((s) => s.ensure);
+  const account = useTrade((s) => s.accounts[acctKey]);
   const openFn = useTrade((s) => s.open);
   const closeFn = useTrade((s) => s.close);
   const addDiamonds = useWallet((s) => s.add);
   const celebrate = useCelebration((s) => s.celebrate);
+
+  useEffect(() => {
+    ensure(acctKey, startBal);
+  }, [ensure, acctKey, startBal]);
+
+  const positions = account?.positions ?? [];
+  const history = account?.history ?? [];
+  const cashBalance = account?.cashBalance ?? startBal;
+  const startingBalance = account?.startingBalance ?? startBal;
 
   const inst = INSTRUMENTS.find((i) => i.symbol === symbol)!;
   const price = engine.prices[symbol] ?? 0;
@@ -57,7 +70,7 @@ export default function Sandbox() {
 
   const submit = (side: Side, qty: number, leverage: number) => {
     const wasFirst = positions.length === 0 && history.length === 0;
-    const id = openFn({ symbol, side, qty, leverage, price });
+    const id = openFn(acctKey, { symbol, side, qty, leverage, price });
     void Haptics.notificationAsync(
       id ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
     );
@@ -180,7 +193,7 @@ export default function Sandbox() {
               onClose={() => {
                 const exit = engine.prices[p.symbol] ?? p.entryPrice;
                 const pnl = unrealizedPnl(p.side, p.qty, p.entryPrice, exit);
-                closeFn(p.id, exit);
+                closeFn(acctKey, p.id, exit);
                 if (pnl > 0) addDiamonds(DIAMOND.TRADE_REWARD); // successful trade
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               }}

@@ -1,4 +1,5 @@
-import { View, Pressable } from 'react-native';
+import { useEffect } from 'react';
+import { View, Pressable, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Pill, Button, Card, Icon } from '@/ui';
@@ -63,10 +64,16 @@ export default function CompetitionDetail() {
   const spend = useWallet((s) => s.spend);
   const openStore = useWallet((s) => s.openStore);
   const me = useSession((s) => s.user);
-  // Live trading account → drives the user's equity/return in the leaderboard.
-  const cash = useTrade((s) => s.cashBalance);
-  const startBal = useTrade((s) => s.startingBalance);
-  const myReturnPct = ((cash - startBal) / startBal) * 100;
+  // This competition's own trading account → drives your equity/return in the
+  // leaderboard. Each competition has a separate, fresh account.
+  const ensure = useTrade((s) => s.ensure);
+  const acct = useTrade((s) => s.accounts[id]);
+  useEffect(() => {
+    if (stored) ensure(id, stored.startingBalance);
+  }, [stored, id, ensure]);
+  const startBal = acct?.startingBalance ?? stored?.startingBalance ?? 100000;
+  const cash = acct?.cashBalance ?? startBal;
+  const myReturnPct = startBal > 0 ? ((cash - startBal) / startBal) * 100 : 0;
   const { data: queried, isLoading } = useCompetition(id, !stored);
   const { data: mockRows } = useLeaderboard(id, !stored);
   const c = stored ?? queried;
@@ -133,8 +140,37 @@ export default function CompetitionDetail() {
             variant="success"
             full
             style={{ marginTop: spacing.md }}
-            onPress={() => router.push('/sandbox')}
+            onPress={() =>
+              router.push({
+                pathname: '/sandbox',
+                params: { cid: c.id, start: String(c.startingBalance) },
+              })
+            }
           />
+
+          {isMine && c.joinCode ? (
+            <Card style={{ marginTop: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <View style={{ flex: 1 }}>
+                <Txt variant="tiny" color={colors.faint}>
+                  INVITE CODE
+                </Txt>
+                <Txt variant="h2" style={{ letterSpacing: 2 }}>
+                  {c.joinCode}
+                </Txt>
+              </View>
+              <Button
+                label="Invite"
+                size="sm"
+                variant="neutral"
+                left={<Icon name="share-social" size={16} color={colors.ink} />}
+                onPress={() =>
+                  void Share.share({
+                    message: `Join my Arena competition "${c.name}" — code ${c.joinCode}`,
+                  })
+                }
+              />
+            </Card>
+          ) : null}
 
           <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.sm }}>
             Leaderboard

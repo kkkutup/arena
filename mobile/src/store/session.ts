@@ -3,6 +3,8 @@ import type { Me } from '@/api/types';
 import type { AuthSession } from '@/api/auth';
 import { useWallet } from '@/store/wallet';
 import { useMyCompetitions } from '@/store/competitions';
+import { useTrade } from '@/store/trade';
+import { DAILY_GOAL_XP } from '@/lib/goals';
 
 type AuthMethod = 'google' | 'apple' | 'email';
 
@@ -21,6 +23,8 @@ interface SessionState {
   // XP earned today (drives the Home daily goal). Resets on a new day.
   dailyXp: number;
   dailyXpDate: string | null;
+  // Last day the daily goal was completed (so streak bumps once per day).
+  streakDate: string | null;
   // Award XP (e.g. from the backtest game); recomputes level + daily progress.
   addXp: (n: number) => void;
   // Real auth (backend): store tokens + user.
@@ -40,6 +44,7 @@ export const useSession = create<SessionState>((set) => ({
   btTourSeen: false,
   dailyXp: 0,
   dailyXpDate: null,
+  streakDate: null,
 
   markTourSeen: () => set({ tourSeen: true }),
   markBtTourSeen: () => set({ btTourSeen: true }),
@@ -50,10 +55,17 @@ export const useSession = create<SessionState>((set) => ({
       const today = new Date().toISOString().slice(0, 10);
       const dailyXp = (s.dailyXpDate === today ? s.dailyXp : 0) + n;
       const xp = s.user.stats.xp + n;
+      // Completing the daily goal bumps the streak — once per day.
+      const completed = dailyXp >= DAILY_GOAL_XP && s.streakDate !== today;
+      const streakCount = s.user.stats.streakCount + (completed ? 1 : 0);
       return {
         dailyXp,
         dailyXpDate: today,
-        user: { ...s.user, stats: { ...s.user.stats, xp, level: Math.floor(xp / 100) + 1 } },
+        streakDate: completed ? today : s.streakDate,
+        user: {
+          ...s.user,
+          stats: { ...s.user.stats, xp, level: Math.floor(xp / 100) + 1, streakCount },
+        },
       };
     }),
 
@@ -111,6 +123,7 @@ export const useSession = create<SessionState>((set) => ({
   signOut: () => {
     useWallet.getState().reset();
     useMyCompetitions.getState().reset();
+    useTrade.getState().resetAll();
     set({
       user: null,
       accessToken: null,
@@ -120,6 +133,7 @@ export const useSession = create<SessionState>((set) => ({
       btTourSeen: false,
       dailyXp: 0,
       dailyXpDate: null,
+      streakDate: null,
     });
   },
 }));

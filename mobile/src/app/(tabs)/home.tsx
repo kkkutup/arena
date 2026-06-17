@@ -27,8 +27,7 @@ import { HOME_TOUR } from '@/features/tour/steps';
 import type { ActivityItem } from '@/api/types';
 import { colors, spacing } from '@/theme/tokens';
 import { timeAgo } from '@/lib/format';
-
-const DAILY_GOAL_XP = 60;
+import { DAILY_GOAL_XP } from '@/lib/goals';
 
 export default function Home() {
   useThemeSync();
