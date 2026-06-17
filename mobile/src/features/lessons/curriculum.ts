@@ -1,4 +1,5 @@
 import type { Track, Lesson, SimpleCandle } from './types';
+import { FREE_EXTRA, PREMIUM_EXTRA } from './curriculum2';
 
 // Small hand-crafted candle series for the "spot it on the chart" exercises.
 const c = (o: number, h: number, l: number, cl: number): SimpleCandle => ({ o, h, l, c: cl });
@@ -607,6 +608,76 @@ const ICT: Track = {
         },
       ],
     },
+    {
+      id: 'i-mss',
+      title: 'Market structure shift',
+      teach: [
+        {
+          emoji: '🔀',
+          heading: 'The trend cracks',
+          body: 'A Market Structure Shift (MSS) is a decisive break of the most recent swing WITH displacement — a higher-confidence reversal signal than a plain CHoCH. It’s often the trigger to start hunting entries.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'choice',
+          prompt: 'An MSS is most reliable when it comes with…',
+          options: ['Displacement', 'Low volume', 'A doji'],
+          answer: 0,
+          explain: 'Displacement shows real institutional intent.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'A market structure shift ___ the current trend.',
+          options: ['flips', 'confirms', 'ignores'],
+          answer: 0,
+          explain: 'It signals the trend is changing direction.',
+        },
+        {
+          kind: 'match',
+          prompt: 'Match the break to what it means.',
+          pairs: [
+            { a: 'BOS', b: 'Continuation' },
+            { a: 'MSS / CHoCH', b: 'Reversal' },
+          ],
+          explain: 'BOS continues the trend; MSS/CHoCH reverses it.',
+        },
+      ],
+    },
+    {
+      id: 'i-liquidity-types',
+      title: 'Buy-side vs sell-side',
+      teach: [
+        {
+          emoji: '💦',
+          heading: 'Where the stops sit',
+          body: 'Buy-side liquidity rests ABOVE old highs (short-stops + breakout buys). Sell-side liquidity rests BELOW old lows. Price often runs one pool, then reverses toward the other.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'choice',
+          prompt: 'Buy-side liquidity sits…',
+          options: ['Above old highs', 'Below old lows', 'At the open'],
+          answer: 0,
+          explain: 'Short-stops and breakout buy orders cluster above highs.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'Sell-side liquidity rests ___ old lows.',
+          options: ['below', 'above', 'at'],
+          answer: 0,
+          explain: 'Long-stops cluster below the lows.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'After sweeping sell-side liquidity, price often…',
+          options: ['Reverses up', 'Drops forever', 'Stops trading'],
+          answer: 0,
+          explain: 'A sweep grabs the stops, then reverses.',
+        },
+      ],
+    },
   ],
 };
 
@@ -733,10 +804,81 @@ const ELLIOTT: Track = {
         },
       ],
     },
+    {
+      id: 'e-corrections',
+      title: 'Correction shapes',
+      teach: [
+        {
+          emoji: '🪗',
+          heading: 'Three flavors of pullback',
+          body: 'A-B-C corrections come in shapes: a zigzag (sharp), a flat (sideways), and a triangle (contracting). Recognizing the shape helps you anticipate where the correction ends and the trend resumes.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'choice',
+          prompt: 'A sharp, steep A-B-C correction is a…',
+          options: ['Zigzag', 'Flat', 'Triangle'],
+          answer: 0,
+          explain: 'Zigzags are the sharp corrective form.',
+        },
+        {
+          kind: 'match',
+          prompt: 'Match the correction to its shape.',
+          pairs: [
+            { a: 'Zigzag', b: 'Sharp' },
+            { a: 'Flat', b: 'Sideways' },
+            { a: 'Triangle', b: 'Contracting' },
+          ],
+          explain: 'The three classic corrective shapes.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'Corrections move ___ the larger trend.',
+          options: ['against', 'with', 'beyond'],
+          answer: 0,
+          explain: 'Corrections go counter to the main trend.',
+        },
+      ],
+    },
+    {
+      id: 'e-personality',
+      title: 'Wave personality',
+      teach: [
+        {
+          emoji: '🎭',
+          heading: 'Every wave has a character',
+          body: 'Wave 1 is doubted, wave 2 retraces hard, wave 3 is strong and obvious, wave 4 is choppy, and wave 5 is weaker — often with momentum divergence. Reading personality helps you locate where you are.',
+        },
+      ],
+      exercises: [
+        {
+          kind: 'choice',
+          prompt: 'Which wave is typically strongest and most obvious?',
+          options: ['Wave 3', 'Wave 2', 'Wave 4'],
+          answer: 0,
+          explain: 'Wave 3 is the powerful, widely-recognized move.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'Wave 5 often shows…',
+          options: ['Weakening momentum / divergence', 'Maximum strength', 'No price change'],
+          answer: 0,
+          explain: 'Wave 5 frequently diverges as momentum fades.',
+        },
+        {
+          kind: 'blank',
+          prompt: 'Wave 2 usually retraces a ___ portion of wave 1.',
+          options: ['large', 'tiny', 'zero'],
+          answer: 0,
+          explain: 'Deep wave-2 retracements are common — but never 100%.',
+        },
+      ],
+    },
   ],
 };
 
-export const TRACKS: Track[] = [BASICS, ICT, ELLIOTT];
+export const TRACKS: Track[] = [BASICS, ...FREE_EXTRA, ICT, ELLIOTT, ...PREMIUM_EXTRA];
 
 export function getTrack(id: string): Track | undefined {
   return TRACKS.find((t) => t.id === id);
