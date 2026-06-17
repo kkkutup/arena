@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Me } from '@/api/types';
 import type { AuthSession } from '@/api/auth';
 import { useWallet } from '@/store/wallet';
+import { useMyCompetitions } from '@/store/competitions';
 
 type AuthMethod = 'google' | 'apple' | 'email';
 
@@ -84,6 +85,7 @@ export const useSession = create<SessionState>((set) => ({
 
   signOut: () => {
     useWallet.getState().reset();
+    useMyCompetitions.getState().reset();
     set({ user: null, accessToken: null, refreshToken: null, needsProfile: false, tourSeen: false });
   },
 }));

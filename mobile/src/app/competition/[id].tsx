@@ -4,14 +4,36 @@ import { Screen, Txt, Pill, Button, Card, Icon } from '@/ui';
 import { useCompetition, useLeaderboard } from '@/hooks/queries';
 import { compTypeMeta } from '@/features/competitions/util';
 import { LeaderboardList } from '@/features/competitions/LeaderboardList';
+import { useMyCompetitions } from '@/store/competitions';
+import { useSession } from '@/store/session';
+import type { LeaderboardRow } from '@/api/types';
 import { fmtPct, fmtUsd, timeLeft } from '@/lib/format';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function CompetitionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { data: c, isLoading } = useCompetition(id);
-  const { data: rows } = useLeaderboard(id);
+  // A competition the user just created/joined lives in the client store;
+  // fall back to the mock API for the seeded public ones.
+  const stored = useMyCompetitions((s) => s.getById(id));
+  const me = useSession((s) => s.user);
+  const { data: queried, isLoading } = useCompetition(id);
+  const { data: mockRows } = useLeaderboard(id);
+  const c = stored ?? queried;
+  const loading = stored ? false : isLoading;
+  const rows: LeaderboardRow[] = stored
+    ? [
+        {
+          rank: 1,
+          userId: 'me',
+          username: me?.displayName || me?.username || 'You',
+          avatarUrl: me?.avatarUrl ?? null,
+          equity: stored.startingBalance,
+          returnPct: 0,
+          isMe: true,
+        },
+      ]
+    : mockRows ?? [];
 
   return (
     <Screen>
@@ -19,7 +41,7 @@ export default function CompetitionDetail() {
         <Icon name="chevron-back" size={28} color={colors.ink} />
       </Pressable>
 
-      {isLoading || !c ? (
+      {loading || !c ? (
         <Txt variant="body" color={colors.muted}>
           Loading…
         </Txt>
@@ -58,7 +80,7 @@ export default function CompetitionDetail() {
           <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.sm }}>
             Leaderboard
           </Txt>
-          {rows ? (
+          {rows.length ? (
             <LeaderboardList rows={rows} />
           ) : (
             <Txt variant="small" color={colors.muted}>

@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Button, TextField, Icon } from '@/ui';
 import { INSTRUMENTS } from '@/mock/data';
 import { useWallet, DIAMOND } from '@/store/wallet';
+import { useMyCompetitions } from '@/store/competitions';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { fmtUsd } from '@/lib/format';
 import type { CompetitionType } from '@/api/types';
@@ -33,6 +34,7 @@ export default function CreateCompetition() {
 
   const spend = useWallet((s) => s.spend);
   const openStore = useWallet((s) => s.openStore);
+  const createComp = useMyCompetitions((s) => s.create);
 
   const toggle = (s: string) =>
     setSymbols((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
@@ -46,8 +48,16 @@ export default function CreateCompetition() {
       openStore();
       return;
     }
+    const c = createComp({
+      name,
+      type,
+      instruments: symbols,
+      durationHours: dur,
+      startingBalance: bal,
+      maxLeverage: lev,
+    });
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.back();
+    router.replace({ pathname: '/competition/[id]', params: { id: c.id } });
   };
 
   return (

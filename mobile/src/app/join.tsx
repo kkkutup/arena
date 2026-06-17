@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Button, TextField, Icon } from '@/ui';
 import { useWallet, DIAMOND } from '@/store/wallet';
+import { useMyCompetitions } from '@/store/competitions';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function Join() {
@@ -12,6 +13,7 @@ export default function Join() {
   const valid = code.trim().length >= 4;
   const spend = useWallet((s) => s.spend);
   const openStore = useWallet((s) => s.openStore);
+  const joinByCode = useMyCompetitions((s) => s.joinByCode);
 
   const join = () => {
     if (!valid) return;
@@ -21,9 +23,9 @@ export default function Join() {
       openStore();
       return;
     }
+    const c = joinByCode(code);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // mock: jump into the friends league
-    router.replace({ pathname: '/competition/[id]', params: { id: 'c_friends' } });
+    router.replace({ pathname: '/competition/[id]', params: { id: c.id } });
   };
 
   return (

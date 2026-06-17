@@ -1,0 +1,80 @@
+import { create } from 'zustand';
+import type { Competition, CompetitionType } from '@/api/types';
+
+// Client-side source of truth for the competitions a user has created or joined.
+// Mock for now (in-memory); swaps to backend POST /v1/competitions later.
+export interface CreateInput {
+  name: string;
+  type: CompetitionType;
+  instruments: string[];
+  durationHours: number;
+  startingBalance: number;
+  maxLeverage: number;
+}
+
+function joinCode(): string {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += A[Math.floor(Math.random() * A.length)];
+  return s;
+}
+
+interface CompetitionsState {
+  mine: Competition[];
+  create: (input: CreateInput) => Competition;
+  joinByCode: (code: string) => Competition;
+  getById: (id: string) => Competition | undefined;
+  reset: () => void;
+}
+
+export const useMyCompetitions = create<CompetitionsState>((set, get) => ({
+  mine: [],
+
+  create: (input) => {
+    const now = Date.now();
+    const c: Competition = {
+      id: `uc_${now}`,
+      name: input.name.trim(),
+      type: input.type,
+      instruments: input.instruments,
+      startingBalance: input.startingBalance,
+      maxLeverage: input.maxLeverage,
+      status: 'LIVE',
+      startAt: new Date(now).toISOString(),
+      endAt: new Date(now + input.durationHours * 3_600_000).toISOString(),
+      joinCode: joinCode(),
+      participantCount: 1,
+      myRank: 1,
+      myEquity: input.startingBalance,
+      myReturnPct: 0,
+    };
+    set((s) => ({ mine: [c, ...s.mine] }));
+    return c;
+  },
+
+  joinByCode: (code) => {
+    const now = Date.now();
+    const c: Competition = {
+      id: `uc_${now}`,
+      name: 'Friends League',
+      type: 'PRIVATE_LEAGUE',
+      instruments: ['BTCUSDT', 'ETHUSDT'],
+      startingBalance: 100_000,
+      maxLeverage: 20,
+      status: 'LIVE',
+      startAt: new Date(now).toISOString(),
+      endAt: new Date(now + 72 * 3_600_000).toISOString(),
+      joinCode: code.toUpperCase(),
+      participantCount: 2,
+      myRank: 2,
+      myEquity: 100_000,
+      myReturnPct: 0,
+    };
+    set((s) => ({ mine: [c, ...s.mine] }));
+    return c;
+  },
+
+  getById: (id) => get().mine.find((c) => c.id === id),
+
+  reset: () => set({ mine: [] }),
+}));

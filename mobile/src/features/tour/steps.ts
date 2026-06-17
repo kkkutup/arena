@@ -14,6 +14,11 @@ export const HOME_TOUR: TourStep[] = [
     body: 'Earn XP each day to level up, climb divisions, and stay sharp.',
   },
   {
+    target: 'home-diamonds',
+    title: 'Diamonds 💎',
+    body: 'Your currency. Start with 100 and grab +50 free every day you log in. Spend them to create a competition (25) or join one (10) — running low? Watch an ad or top up.',
+  },
+  {
     target: 'home-duel',
     title: 'Challenge a friend',
     body: 'Start a 1-on-1 duel and prove who reads the market better — winner takes the bragging rights.',

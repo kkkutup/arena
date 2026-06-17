@@ -1,10 +1,11 @@
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Button, Card, Icon, EmptyState } from '@/ui';
-import { useCompetitions, usePublicCompetitions, useDivision } from '@/hooks/queries';
+import { usePublicCompetitions, useDivision } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { tierMeta } from '@/features/competitions/util';
+import { useMyCompetitions } from '@/store/competitions';
 import { useIsFresh } from '@/hooks/useIsFresh';
 import type { Division } from '@/api/types';
 import { colors, spacing, radius } from '@/theme/tokens';
@@ -13,10 +14,9 @@ import { timeLeft } from '@/lib/format';
 export default function Compete() {
   const router = useRouter();
   const fresh = useIsFresh();
-  const mine = useCompetitions();
   const pub = usePublicCompetitions();
   const div = useDivision();
-  const myComps = fresh ? [] : mine.data ?? [];
+  const myComps = useMyCompetitions((s) => s.mine);
 
   return (
     <Screen>

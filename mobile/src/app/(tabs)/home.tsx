@@ -14,10 +14,11 @@ import {
 } from '@/ui';
 import type { IconName } from '@/ui/Icon';
 import { useSession } from '@/store/session';
-import { useCompetitions, useActivity } from '@/hooks/queries';
+import { useActivity } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { TourTarget } from '@/features/tour/TourTarget';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
+import { useMyCompetitions } from '@/store/competitions';
 import { useTour } from '@/store/tour';
 import { useWallet } from '@/store/wallet';
 import { useCelebration } from '@/store/celebration';
@@ -37,7 +38,7 @@ export default function Home() {
   const claimDaily = useWallet((s) => s.claimDaily);
   const celebrate = useCelebration((s) => s.celebrate);
   const router = useRouter();
-  const comps = useCompetitions();
+  const myComps = useMyCompetitions((s) => s.mine);
   const activity = useActivity();
 
   // On the first login we run the coach-mark tour, then drop the daily diamond
@@ -78,7 +79,6 @@ export default function Home() {
     user.stats.streakCount === 0 &&
     user.stats.xp === 0;
   const dailyDone = fresh ? 0 : DAILY_DONE;
-  const myComps = fresh ? [] : comps.data ?? [];
   const feed = fresh ? [] : activity.data ?? [];
 
   return (
@@ -94,7 +94,9 @@ export default function Home() {
           <TourTarget id="home-streak">
             <StreakFlame count={user.stats.streakCount} size={20} />
           </TourTarget>
-          <DiamondPill />
+          <TourTarget id="home-diamonds">
+            <DiamondPill />
+          </TourTarget>
         </View>
       </View>
 
