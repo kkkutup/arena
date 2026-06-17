@@ -3,15 +3,24 @@ import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Button, TextField, Icon } from '@/ui';
+import { useWallet, DIAMOND } from '@/store/wallet';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function Join() {
   const router = useRouter();
   const [code, setCode] = useState('');
   const valid = code.trim().length >= 4;
+  const spend = useWallet((s) => s.spend);
+  const openStore = useWallet((s) => s.openStore);
 
   const join = () => {
     if (!valid) return;
+    // Spend diamonds to join; if too poor, open the get-diamonds sheet.
+    if (!spend(DIAMOND.JOIN_COST)) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      openStore();
+      return;
+    }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     // mock: jump into the friends league
     router.replace({ pathname: '/competition/[id]', params: { id: 'c_friends' } });
@@ -54,7 +63,7 @@ export default function Join() {
           maxLength={10}
           style={{ textAlign: 'center', letterSpacing: 4, fontSize: 22 }}
         />
-        <Button label="Join competition" full disabled={!valid} onPress={join} />
+        <Button label={`Join competition · ${DIAMOND.JOIN_COST} 💎`} full disabled={!valid} onPress={join} />
       </View>
     </Screen>
   );

@@ -5,14 +5,16 @@ import { useAchievements } from '@/hooks/queries';
 import { useCelebration } from '@/store/celebration';
 import { colors, radius } from '@/theme/tokens';
 
-export function AchievementGrid() {
+export function AchievementGrid({ locked = false }: { locked?: boolean }) {
   const { data } = useAchievements();
   const celebrate = useCelebration((s) => s.celebrate);
   if (!data) return null;
 
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-      {data.map((a) => {
+      {data.map((raw) => {
+        // Fresh accounts haven't earned anything yet — show all locked.
+        const a = locked ? { ...raw, unlocked: false, progress: 0 } : raw;
         const icon = a.icon as IconName;
         return (
           <Pressable

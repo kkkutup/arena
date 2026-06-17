@@ -1,16 +1,18 @@
 import { type ReactNode } from 'react';
 import { View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Screen, Txt, Card, Button, TextField } from '@/ui';
+import { Screen, Txt, Card, Button, TextField, EmptyState } from '@/ui';
 import { useFriends, useSuggested } from '@/hooks/queries';
 import { FriendRow } from '@/features/social/FriendRow';
+import { useIsFresh } from '@/hooks/useIsFresh';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function Social() {
+  const fresh = useIsFresh();
   const friends = useFriends();
   const suggested = useSuggested();
-  const requests = friends.data?.filter((f) => f.status === 'PENDING_IN') ?? [];
-  const accepted = friends.data?.filter((f) => f.status === 'FRIENDS') ?? [];
+  const requests = fresh ? [] : friends.data?.filter((f) => f.status === 'PENDING_IN') ?? [];
+  const accepted = fresh ? [] : friends.data?.filter((f) => f.status === 'FRIENDS') ?? [];
   const tap = () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
   return (
@@ -39,16 +41,20 @@ export default function Social() {
       ) : null}
 
       <SectionTitle>Your friends ({accepted.length})</SectionTitle>
-      <Card padded={false} style={{ paddingHorizontal: spacing.lg }}>
-        {accepted.map((f, i) => (
-          <FriendRow
-            key={f.id}
-            friend={f}
-            last={i === accepted.length - 1}
-            action={<Button label="Duel" size="sm" variant="outline" onPress={tap} />}
-          />
-        ))}
-      </Card>
+      {accepted.length ? (
+        <Card padded={false} style={{ paddingHorizontal: spacing.lg }}>
+          {accepted.map((f, i) => (
+            <FriendRow
+              key={f.id}
+              friend={f}
+              last={i === accepted.length - 1}
+              action={<Button label="Duel" size="sm" variant="outline" onPress={tap} />}
+            />
+          ))}
+        </Card>
+      ) : (
+        <EmptyState icon="people-outline" text="Add friends to duel and compete together" />
+      )}
 
       <SectionTitle>Suggested</SectionTitle>
       <Card padded={false} style={{ paddingHorizontal: spacing.lg }}>

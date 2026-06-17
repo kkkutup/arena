@@ -9,4 +9,5 @@ export * from './ProgressRing';
 export * from './StreakFlame';
 export * from './Icon';
 export * from './Screen';
+export * from './EmptyState';
 export * from './CelebrationOverlay';

@@ -10,13 +10,17 @@ import {
   StreakFlame,
   Button,
   Icon,
+  EmptyState,
 } from '@/ui';
 import type { IconName } from '@/ui/Icon';
 import { useSession } from '@/store/session';
 import { useCompetitions, useActivity } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { TourTarget } from '@/features/tour/TourTarget';
+import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { useTour } from '@/store/tour';
+import { useWallet } from '@/store/wallet';
+import { useCelebration } from '@/store/celebration';
 import { HOME_TOUR } from '@/features/tour/steps';
 import type { ActivityItem } from '@/api/types';
 import { colors, spacing } from '@/theme/tokens';
@@ -30,16 +34,41 @@ export default function Home() {
   const tourSeen = useSession((s) => s.tourSeen);
   const markTourSeen = useSession((s) => s.markTourSeen);
   const startTour = useTour((s) => s.start);
+  const claimDaily = useWallet((s) => s.claimDaily);
+  const celebrate = useCelebration((s) => s.celebrate);
   const router = useRouter();
   const comps = useCompetitions();
   const activity = useActivity();
 
-  // First login only: kick off the coach-mark tour once the screen lays out.
+  // On the first login we run the coach-mark tour, then drop the daily diamond
+  // bonus so the two overlays never fight; returning users get it right away.
+  // claimDaily is idempotent per day, so re-runs can't double-grant.
   useEffect(() => {
-    if (!user || tourSeen) return;
-    const t = setTimeout(() => void startTour(HOME_TOUR, markTourSeen), 500);
-    return () => clearTimeout(t);
-  }, [user, tourSeen, startTour, markTourSeen]);
+    if (!user) return;
+    const grantDaily = () => {
+      const granted = claimDaily();
+      if (granted > 0) {
+        celebrate({
+          icon: 'diamond',
+          color: colors.primary,
+          title: `+${granted} Diamonds`,
+          subtitle: 'Daily login bonus — come back tomorrow for more!',
+        });
+      }
+    };
+    if (!tourSeen) {
+      const t = setTimeout(
+        () =>
+          void startTour(HOME_TOUR, () => {
+            markTourSeen();
+            grantDaily();
+          }),
+        500,
+      );
+      return () => clearTimeout(t);
+    }
+    grantDaily();
+  }, [user, tourSeen, startTour, markTourSeen, claimDaily, celebrate]);
 
   if (!user) return null;
 
@@ -65,7 +94,7 @@ export default function Home() {
           <TourTarget id="home-streak">
             <StreakFlame count={user.stats.streakCount} size={20} />
           </TourTarget>
-          <GemChip count={user.gems} />
+          <DiamondPill />
         </View>
       </View>
 
@@ -126,57 +155,6 @@ export default function Home() {
         />
       )}
     </Screen>
-  );
-}
-
-function EmptyState({
-  icon,
-  text,
-  action,
-  onAction,
-}: {
-  icon: IconName;
-  text: string;
-  action: string;
-  onAction: () => void;
-}) {
-  return (
-    <Card
-      flat
-      style={{
-        backgroundColor: colors.surfaceAlt,
-        alignItems: 'center',
-        paddingVertical: spacing.xl,
-        gap: spacing.md,
-      }}
-    >
-      <Icon name={icon} size={28} color={colors.faint} />
-      <Txt variant="body" color={colors.muted}>
-        {text}
-      </Txt>
-      <Button label={action} size="sm" variant="neutral" onPress={onAction} />
-    </Card>
-  );
-}
-
-function GemChip({ count }: { count: number }) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: colors.primaryTint,
-        borderRadius: 999,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-      }}
-    >
-      <Icon name="diamond" size={14} color={colors.primary} />
-      <Txt variant="label" color={colors.primary}>
-        {count}
-      </Txt>
-    </View>
   );
 }
 

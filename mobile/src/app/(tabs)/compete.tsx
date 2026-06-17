@@ -1,24 +1,29 @@
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Txt, Button, Card, Icon } from '@/ui';
+import { Screen, Txt, Button, Card, Icon, EmptyState } from '@/ui';
 import { useCompetitions, usePublicCompetitions, useDivision } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
+import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { tierMeta } from '@/features/competitions/util';
+import { useIsFresh } from '@/hooks/useIsFresh';
 import type { Division } from '@/api/types';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { timeLeft } from '@/lib/format';
 
 export default function Compete() {
   const router = useRouter();
+  const fresh = useIsFresh();
   const mine = useCompetitions();
   const pub = usePublicCompetitions();
   const div = useDivision();
+  const myComps = fresh ? [] : mine.data ?? [];
 
   return (
     <Screen>
-      <Txt variant="title" style={{ marginTop: spacing.sm }}>
-        Compete
-      </Txt>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm }}>
+        <Txt variant="title">Compete</Txt>
+        <DiamondPill />
+      </View>
 
       <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
         <View style={{ flex: 1 }}>
@@ -40,16 +45,25 @@ export default function Compete() {
         </View>
       </View>
 
-      {div.data ? <DivisionCard div={div.data} onPress={() => router.push('/division')} /> : null}
+      {!fresh && div.data ? (
+        <DivisionCard div={div.data} onPress={() => router.push('/division')} />
+      ) : null}
 
       <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
         Your competitions
       </Txt>
-      <View style={{ gap: spacing.md }}>
-        {mine.data?.map((c) => (
-          <CompetitionCard key={c.id} c={c} />
-        ))}
-      </View>
+      {myComps.length ? (
+        <View style={{ gap: spacing.md }}>
+          {myComps.map((c) => (
+            <CompetitionCard key={c.id} c={c} />
+          ))}
+        </View>
+      ) : (
+        <EmptyState
+          icon="trophy-outline"
+          text="No competitions yet — create one or browse public below"
+        />
+      )}
 
       <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
         Browse public

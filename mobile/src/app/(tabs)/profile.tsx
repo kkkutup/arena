@@ -1,14 +1,19 @@
-import { View } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Txt, Avatar, Button, Card, StreakFlame } from '@/ui';
+import { Screen, Txt, Avatar, Button, Card, StreakFlame, Icon } from '@/ui';
 import { useSession } from '@/store/session';
+import { useWallet } from '@/store/wallet';
 import { AchievementGrid } from '@/features/profile/AchievementGrid';
-import { colors, spacing } from '@/theme/tokens';
+import { useIsFresh } from '@/hooks/useIsFresh';
+import { colors, spacing, radius } from '@/theme/tokens';
 
 export default function Profile() {
   const router = useRouter();
   const user = useSession((s) => s.user);
   const signOut = useSession((s) => s.signOut);
+  const fresh = useIsFresh();
+  const balance = useWallet((s) => s.balance);
+  const openStore = useWallet((s) => s.openStore);
 
   if (!user) return null;
 
@@ -30,10 +35,34 @@ export default function Profile() {
         <Stat label="Wins" value={user.stats.wins} />
       </Card>
 
+      <Pressable onPress={openStore}>
+        <Card style={{ marginTop: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: radius.md,
+              backgroundColor: colors.primaryTint,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon name="diamond" size={22} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Txt variant="h3">{balance} diamonds</Txt>
+            <Txt variant="small" color={colors.muted}>
+              Tap to earn or buy more
+            </Txt>
+          </View>
+          <Icon name="chevron-forward" size={22} color={colors.faint} />
+        </Card>
+      </Pressable>
+
       <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
         Achievements
       </Txt>
-      <AchievementGrid />
+      <AchievementGrid locked={fresh} />
 
       <Button
         label="Sign out"

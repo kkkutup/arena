@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Button, TextField, Icon } from '@/ui';
 import { INSTRUMENTS } from '@/mock/data';
+import { useWallet, DIAMOND } from '@/store/wallet';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { fmtUsd } from '@/lib/format';
 import type { CompetitionType } from '@/api/types';
@@ -30,12 +31,21 @@ export default function CreateCompetition() {
   const [bal, setBal] = useState(100000);
   const [lev, setLev] = useState(20);
 
+  const spend = useWallet((s) => s.spend);
+  const openStore = useWallet((s) => s.openStore);
+
   const toggle = (s: string) =>
     setSymbols((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
   const valid = name.trim().length >= 3 && symbols.length > 0;
 
   const create = () => {
     if (!valid) return;
+    // Spend diamonds to create; if too poor, open the get-diamonds sheet.
+    if (!spend(DIAMOND.CREATE_COST)) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      openStore();
+      return;
+    }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };
@@ -80,7 +90,13 @@ export default function CreateCompetition() {
           ))}
         </Field>
 
-        <Button label="Create competition" full disabled={!valid} onPress={create} style={{ marginTop: spacing.md }} />
+        <Button
+          label={`Create competition · ${DIAMOND.CREATE_COST} 💎`}
+          full
+          disabled={!valid}
+          onPress={create}
+          style={{ marginTop: spacing.md }}
+        />
       </View>
     </Screen>
   );

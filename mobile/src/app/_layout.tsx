@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CelebrationOverlay } from '@/ui';
 import { TourOverlay } from '@/features/tour/TourOverlay';
+import { DiamondStoreSheet } from '@/features/wallet/DiamondStoreSheet';
 import {
   useFonts,
   Nunito_400Regular,
@@ -45,6 +46,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }} />
           <CelebrationOverlay />
           <TourOverlay />
+          <DiamondStoreSheet />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

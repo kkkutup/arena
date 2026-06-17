@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Me } from '@/api/types';
 import type { AuthSession } from '@/api/auth';
+import { useWallet } from '@/store/wallet';
 
 type AuthMethod = 'google' | 'apple' | 'email';
 
@@ -30,15 +31,18 @@ export const useSession = create<SessionState>((set) => ({
 
   markTourSeen: () => set({ tourSeen: true }),
 
-  setSession: (session) =>
+  setSession: (session) => {
+    useWallet.getState().reset();
     set({
       user: session.user,
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
       needsProfile: false,
-    }),
+    });
+  },
 
-  signInWith: (method, email) =>
+  signInWith: (method, email) => {
+    useWallet.getState().reset();
     set({
       needsProfile: true,
       accessToken: null,
@@ -60,7 +64,8 @@ export const useSession = create<SessionState>((set) => ({
           winRate: 0,
         },
       },
-    }),
+    });
+  },
 
   // New users start fresh — no fake XP/level/streak. They earn it in-app.
   completeProfile: (username, displayName) =>
@@ -77,6 +82,8 @@ export const useSession = create<SessionState>((set) => ({
         : s,
     ),
 
-  signOut: () =>
-    set({ user: null, accessToken: null, refreshToken: null, needsProfile: false, tourSeen: false }),
+  signOut: () => {
+    useWallet.getState().reset();
+    set({ user: null, accessToken: null, refreshToken: null, needsProfile: false, tourSeen: false });
+  },
 }));
