@@ -43,12 +43,21 @@ export default function Home() {
 
   if (!user) return null;
 
+  // A brand-new account starts empty — show a clean slate, not demo data.
+  const fresh =
+    user.stats.competitionsPlayed === 0 &&
+    user.stats.streakCount === 0 &&
+    user.stats.xp === 0;
+  const dailyDone = fresh ? 0 : DAILY_DONE;
+  const myComps = fresh ? [] : comps.data ?? [];
+  const feed = fresh ? [] : activity.data ?? [];
+
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
         <View style={{ flex: 1 }}>
           <Txt variant="small" color={colors.muted}>
-            Welcome back
+            {fresh ? 'Welcome to Arena' : 'Welcome back'}
           </Txt>
           <Txt variant="title">{user.displayName || user.username}</Txt>
         </View>
@@ -62,13 +71,15 @@ export default function Home() {
 
       <TourTarget id="home-daily" style={{ marginTop: spacing.lg }}>
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>
-          <ProgressRing progress={DAILY_DONE / DAILY_GOAL_XP} size={76} color={colors.gold}>
+          <ProgressRing progress={dailyDone / DAILY_GOAL_XP} size={76} color={colors.gold}>
             <Icon name="flash" size={26} color={colors.gold} />
           </ProgressRing>
           <View style={{ flex: 1, gap: 4 }}>
             <Txt variant="h3">Daily goal</Txt>
             <Txt variant="body" color={colors.muted}>
-              {DAILY_DONE} / {DAILY_GOAL_XP} XP — keep your streak alive!
+              {fresh
+                ? `0 / ${DAILY_GOAL_XP} XP — start your streak today!`
+                : `${dailyDone} / ${DAILY_GOAL_XP} XP — keep your streak alive!`}
             </Txt>
           </View>
         </Card>
@@ -83,20 +94,68 @@ export default function Home() {
         />
       </TourTarget>
 
-      <SectionHeader title="Your competitions" action="See all" onAction={() => router.push('/compete')} />
-      <View style={{ gap: spacing.md }}>
-        {comps.data?.map((c) => (
-          <CompetitionCard key={c.id} c={c} />
-        ))}
-      </View>
+      <SectionHeader title="Your competitions" action={myComps.length ? 'See all' : undefined} onAction={() => router.push('/compete')} />
+      {myComps.length ? (
+        <View style={{ gap: spacing.md }}>
+          {myComps.map((c) => (
+            <CompetitionCard key={c.id} c={c} />
+          ))}
+        </View>
+      ) : (
+        <EmptyState
+          icon="trophy-outline"
+          text="No competitions yet"
+          action="Find a competition"
+          onAction={() => router.push('/compete')}
+        />
+      )}
 
       <SectionHeader title="Friends activity" />
-      <Card padded={false} style={{ paddingVertical: 4 }}>
-        {activity.data?.map((a, i) => (
-          <ActivityRow key={a.id} item={a} last={i === (activity.data?.length ?? 0) - 1} />
-        ))}
-      </Card>
+      {feed.length ? (
+        <Card padded={false} style={{ paddingVertical: 4 }}>
+          {feed.map((a, i) => (
+            <ActivityRow key={a.id} item={a} last={i === feed.length - 1} />
+          ))}
+        </Card>
+      ) : (
+        <EmptyState
+          icon="people-outline"
+          text="No friend activity yet"
+          action="Add friends"
+          onAction={() => router.push('/social')}
+        />
+      )}
     </Screen>
+  );
+}
+
+function EmptyState({
+  icon,
+  text,
+  action,
+  onAction,
+}: {
+  icon: IconName;
+  text: string;
+  action: string;
+  onAction: () => void;
+}) {
+  return (
+    <Card
+      flat
+      style={{
+        backgroundColor: colors.surfaceAlt,
+        alignItems: 'center',
+        paddingVertical: spacing.xl,
+        gap: spacing.md,
+      }}
+    >
+      <Icon name={icon} size={28} color={colors.faint} />
+      <Txt variant="body" color={colors.muted}>
+        {text}
+      </Txt>
+      <Button label={action} size="sm" variant="neutral" onPress={onAction} />
+    </Card>
   );
 }
 

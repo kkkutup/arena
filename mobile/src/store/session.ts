@@ -62,6 +62,7 @@ export const useSession = create<SessionState>((set) => ({
       },
     }),
 
+  // New users start fresh — no fake XP/level/streak. They earn it in-app.
   completeProfile: (username, displayName) =>
     set((s) =>
       s.user
@@ -71,7 +72,6 @@ export const useSession = create<SessionState>((set) => ({
               ...s.user,
               username: username.trim(),
               displayName: displayName?.trim() || username.trim(),
-              stats: { ...s.user.stats, xp: 430, level: 4, streakCount: 7 },
             },
           }
         : s,
