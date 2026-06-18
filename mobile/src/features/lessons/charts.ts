@@ -196,4 +196,21 @@ export const CHARTS = {
       { from: 0, to: 4, low: 104, high: 106, label: 'POC', color: PRIM },
     ],
   },
+  marketCycle: {
+    candles: [
+      c(100, 101, 99, 100),
+      c(100, 101, 99, 100.5),
+      c(100.5, 105, 100, 104),
+      c(104, 109, 103, 108),
+      c(108, 110, 107, 109),
+      c(109, 110, 105, 106),
+      c(106, 107, 100, 101),
+    ],
+    markers: [
+      { index: 1, label: 'Accum' },
+      { index: 3, label: 'Markup' },
+      { index: 4, label: 'Distrib' },
+      { index: 6, label: 'Markdown' },
+    ],
+  },
 } satisfies Record<string, ChartSpec>;

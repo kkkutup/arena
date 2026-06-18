@@ -19,6 +19,11 @@ export const HOME_TOUR: TourStep[] = [
     body: 'Your currency. Start with 100 and grab +50 free every day you log in. Spend them to create a competition (25) or join one (10) — running low? Watch an ad or top up.',
   },
   {
+    target: 'home-lesson',
+    title: 'Learn & earn 📚',
+    body: 'Your daily lesson lives here. Bite-sized lessons on candles, ICT, Elliott, Wyckoff and more — finish them to earn XP and climb the ranks. Find them all in the Learn tab.',
+  },
+  {
     target: 'home-duel',
     title: 'Challenge a friend',
     body: 'Start a 1-on-1 duel and prove who reads the market better — winner takes the bragging rights.',

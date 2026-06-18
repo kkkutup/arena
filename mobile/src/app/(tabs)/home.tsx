@@ -123,12 +123,13 @@ export default function Home() {
       </TourTarget>
 
       {nextLesson ? (
-        <Pressable
-          onPress={() =>
-            router.push({ pathname: '/lesson/[id]', params: { id: nextLesson.lessonId } })
-          }
-        >
-          <Card style={{ marginTop: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <TourTarget id="home-lesson" style={{ marginTop: spacing.lg }}>
+          <Pressable
+            onPress={() =>
+              router.push({ pathname: '/lesson/[id]', params: { id: nextLesson.lessonId } })
+            }
+          >
+            <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <View
               style={{
                 width: 48,
@@ -151,8 +152,9 @@ export default function Home() {
               </Txt>
             </View>
             <Icon name="play-circle" size={26} color={nextLesson.color} />
-          </Card>
-        </Pressable>
+            </Card>
+          </Pressable>
+        </TourTarget>
       ) : null}
 
       <TourTarget id="home-duel" style={{ marginTop: spacing.lg }}>

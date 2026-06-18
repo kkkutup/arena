@@ -6,12 +6,24 @@ import {
   View,
   type LayoutChangeEvent,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { Txt, Button } from '@/ui';
 import { useTour } from '@/store/tour';
 import { colors, spacing, radius } from '@/theme/tokens';
 
 const PAD = 8;
+const HOLE_RADIUS = 16;
 const DIM = 'rgba(13,13,24,0.74)';
+
+// SVG path for a rounded rectangle (the spotlight hole).
+function roundedRect(x: number, y: number, w: number, h: number, r: number): string {
+  const rad = Math.min(r, w / 2, h / 2);
+  return (
+    `M${x + rad} ${y} h${w - 2 * rad} a${rad} ${rad} 0 0 1 ${rad} ${rad}` +
+    ` v${h - 2 * rad} a${rad} ${rad} 0 0 1 ${-rad} ${rad} h${-(w - 2 * rad)}` +
+    ` a${rad} ${rad} 0 0 1 ${-rad} ${-rad} v${-(h - 2 * rad)} a${rad} ${rad} 0 0 1 ${rad} ${-rad} Z`
+  );
+}
 
 // Renders the dim + spotlight cutout + tooltip for the active coach-mark step.
 // The cutout is built from four dim panels framing the target rect (no SVG
@@ -32,6 +44,7 @@ export function TourOverlay() {
   const rootRef = useRef<View>(null);
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [frameH, setFrameH] = useState(0);
+  const [frameW, setFrameW] = useState(0);
   const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,6 +63,7 @@ export function TourOverlay() {
 
   const onLayout = (e: LayoutChangeEvent) => {
     setFrameH(e.nativeEvent.layout.height);
+    setFrameW(e.nativeEvent.layout.width);
     rootRef.current?.measureInWindow?.((x, y) => setOrigin({ x, y }));
   };
 
@@ -78,12 +92,16 @@ export function TourOverlay() {
     >
       {/* dim + spotlight (tap anywhere to advance) */}
       <Pressable ref={rootRef} onLayout={onLayout} style={StyleSheet.absoluteFill} onPress={advance}>
-        {hole ? (
+        {hole && frameW > 0 && frameH > 0 ? (
           <>
-            <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: hole.y, backgroundColor: DIM }} />
-            <View style={{ position: 'absolute', left: 0, right: 0, top: hole.y + hole.h, bottom: 0, backgroundColor: DIM }} />
-            <View style={{ position: 'absolute', top: hole.y, height: hole.h, left: 0, width: hole.x, backgroundColor: DIM }} />
-            <View style={{ position: 'absolute', top: hole.y, height: hole.h, left: hole.x + hole.w, right: 0, backgroundColor: DIM }} />
+            {/* dim everything, then punch a rounded hole (even-odd fill) */}
+            <Svg pointerEvents="none" width={frameW} height={frameH} style={StyleSheet.absoluteFill}>
+              <Path
+                d={`M0 0 H${frameW} V${frameH} H0 Z ${roundedRect(hole.x, hole.y, hole.w, hole.h, HOLE_RADIUS)}`}
+                fill={DIM}
+                fillRule="evenodd"
+              />
+            </Svg>
             <View
               pointerEvents="none"
               style={{
@@ -92,7 +110,7 @@ export function TourOverlay() {
                 top: hole.y,
                 width: hole.w,
                 height: hole.h,
-                borderRadius: radius.lg,
+                borderRadius: HOLE_RADIUS,
                 borderWidth: 2.5,
                 borderColor: colors.gold,
               }}
