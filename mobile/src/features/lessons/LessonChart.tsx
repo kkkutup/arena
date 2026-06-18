@@ -11,7 +11,7 @@ import { colors, radius } from '@/theme/tokens';
 export function LessonChart({
   candles,
   markers,
-  zone,
+  zones,
   width,
   height,
   selected,
@@ -20,7 +20,7 @@ export function LessonChart({
 }: {
   candles: SimpleCandle[];
   markers?: ChartMarker[];
-  zone?: ChartZone;
+  zones?: ChartZone[];
   width: number;
   height: number;
   selected?: string;
@@ -37,9 +37,9 @@ export function LessonChart({
     if (k.h > max) max = k.h;
     if (k.l < min) min = k.l;
   }
-  if (zone) {
-    if (zone.high > max) max = zone.high;
-    if (zone.low < min) min = zone.low;
+  for (const z of zones ?? []) {
+    if (z.high > max) max = z.high;
+    if (z.low < min) min = z.low;
   }
   const range = max - min || 1;
   const n = candles.length;
@@ -57,20 +57,21 @@ export function LessonChart({
   return (
     <View style={{ width, height }}>
       <Svg width={width} height={height}>
-        {/* highlight zone (e.g. an order block) */}
-        {zone ? (
+        {/* highlight zones (order block, support, SL/TP, …) */}
+        {(zones ?? []).map((z, zi) => (
           <Rect
-            x={zone.from * slot}
-            y={y(zone.high)}
-            width={(zone.to - zone.from + 1) * slot}
-            height={Math.max(4, y(zone.low) - y(zone.high))}
-            fill={zone.color ?? colors.primary}
+            key={`zone-${zi}`}
+            x={z.from * slot}
+            y={y(z.high)}
+            width={(z.to - z.from + 1) * slot}
+            height={Math.max(4, y(z.low) - y(z.high))}
+            fill={z.color ?? colors.primary}
             opacity={0.16}
-            stroke={zone.color ?? colors.primary}
+            stroke={z.color ?? colors.primary}
             strokeWidth={1.2}
             rx={4}
           />
-        ) : null}
+        ))}
         {/* marker bands */}
         {(markers ?? []).map((m) => {
           const col = bandColor(m.label);
@@ -128,29 +129,30 @@ export function LessonChart({
           </View>
         </View>
       ))}
-      {/* zone label */}
-      {zone ? (
+      {/* zone labels */}
+      {(zones ?? []).map((z, zi) => (
         <View
+          key={`zlbl-${zi}`}
           style={{
             position: 'absolute',
-            left: zone.from * slot + 4,
-            top: Math.max(2, y(zone.high) - 10),
+            left: z.from * slot + 4,
+            top: Math.max(2, y(z.high) - 10),
           }}
         >
           <View
             style={{
-              backgroundColor: zone.color ?? colors.primary,
+              backgroundColor: z.color ?? colors.primary,
               borderRadius: radius.sm,
               paddingHorizontal: 7,
               paddingVertical: 1,
             }}
           >
             <Txt variant="tiny" color={colors.white}>
-              {zone.label}
+              {z.label}
             </Txt>
           </View>
         </View>
-      ) : null}
+      ))}
     </View>
   );
 }

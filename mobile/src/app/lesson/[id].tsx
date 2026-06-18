@@ -133,7 +133,7 @@ export default function LessonPlayer() {
             <LessonChart
               candles={current.card.chart.candles}
               markers={current.card.chart.markers}
-              zone={current.card.chart.zone}
+              zones={current.card.chart.zones}
               width={width - spacing.lg * 2}
               height={190}
             />

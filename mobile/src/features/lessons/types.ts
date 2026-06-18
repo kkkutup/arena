@@ -23,7 +23,7 @@ export interface ChartZone {
 export interface ChartSpec {
   candles: SimpleCandle[];
   markers?: ChartMarker[];
-  zone?: ChartZone;
+  zones?: ChartZone[];
 }
 
 // ---- Teaching cards (shown before the exercises) ----

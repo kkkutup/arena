@@ -1,5 +1,6 @@
 import type { Track, Lesson, SimpleCandle } from './types';
 import { FREE_EXTRA, PREMIUM_EXTRA } from './curriculum2';
+import { CHARTS } from './charts';
 
 // Small hand-crafted candle series for the "spot it on the chart" exercises.
 const c = (o: number, h: number, l: number, cl: number): SimpleCandle => ({ o, h, l, c: cl });
@@ -21,8 +22,8 @@ const BASICS: Track = {
       title: 'What is a candle?',
       teach: [
         {
-          emoji: '🕯️',
           heading: 'A candle = one slice of time',
+          chart: CHARTS.candleAnatomy,
           body: 'Each candle shows four prices for a period (1 min, 1 hour, 1 day…): the Open, the High, the Low, and the Close — "OHLC".',
         },
         {
@@ -68,8 +69,8 @@ const BASICS: Track = {
       title: 'What a candle tells you',
       teach: [
         {
-          emoji: '💪',
           heading: 'Body = conviction',
+          chart: CHARTS.bodyWick,
           body: 'A long body means one side dominated the period. A tiny body means buyers and sellers were balanced (indecision).',
         },
         {
@@ -110,8 +111,8 @@ const BASICS: Track = {
       title: 'Trends & channels',
       teach: [
         {
-          emoji: '📈',
           heading: 'Up, down, or sideways',
+          chart: CHARTS.uptrend,
           body: 'An uptrend makes higher highs and higher lows. A downtrend makes lower highs and lower lows. No clear pattern = ranging.',
         },
         {
@@ -148,8 +149,8 @@ const BASICS: Track = {
       title: 'Support & resistance',
       teach: [
         {
-          emoji: '🧱',
           heading: 'Floors and ceilings',
+          chart: CHARTS.supportResistance,
           body: 'Support is a price floor where buyers tend to step in. Resistance is a ceiling where sellers tend to step in.',
         },
         {
@@ -267,8 +268,8 @@ const BASICS: Track = {
       title: 'Stop-loss & take-profit',
       teach: [
         {
-          emoji: '🛑',
           heading: 'Stop-loss (SL)',
+          chart: CHARTS.slTp,
           body: 'An SL auto-closes your trade at a set loss, so a bad trade can’t wipe you out. It’s your safety net.',
         },
         {
@@ -308,8 +309,8 @@ const BASICS: Track = {
       title: 'Risk & reward',
       teach: [
         {
-          emoji: '🛡️',
           heading: 'Risk small',
+          chart: CHARTS.riskReward,
           body: 'Pros risk only 1–2% of their account per trade. Survive the losing streaks and you stay in the game.',
         },
         {
@@ -365,8 +366,8 @@ const ICT: Track = {
       title: 'Liquidity',
       teach: [
         {
-          emoji: '💧',
           heading: 'Price hunts liquidity',
+          chart: CHARTS.liquiditySweep,
           body: 'Big institutions need lots of orders to fill. Those orders sit where retail traders cluster stop-losses — just beyond obvious highs and lows.',
         },
         {
@@ -415,7 +416,7 @@ const ICT: Track = {
               c(113, 116, 112, 115),
               c(115, 117, 113, 116),
             ],
-            zone: { from: 2, to: 5, low: 103, high: 108, label: 'Order block' },
+            zones: [{ from: 2, to: 5, low: 103, high: 108, label: 'Order block' }],
           },
         },
       ],
@@ -466,8 +467,8 @@ const ICT: Track = {
       title: 'Fair value gaps',
       teach: [
         {
-          emoji: '🕳️',
           heading: 'An imbalance',
+          chart: CHARTS.fvg,
           body: 'A Fair Value Gap (FVG) is a 3-candle pattern where the middle candle moves so fast it leaves a gap between candle 1’s wick and candle 3’s wick. The market tends to come back and "fill" it.',
         },
       ],
@@ -503,8 +504,8 @@ const ICT: Track = {
       title: 'BOS vs CHoCH',
       teach: [
         {
-          emoji: '➡️',
           heading: 'Break of Structure (BOS)',
+          chart: CHARTS.structureBreak,
           body: 'A BOS is price breaking a recent high/low in the SAME direction as the trend — it signals continuation.',
         },
         {
@@ -544,8 +545,8 @@ const ICT: Track = {
       title: 'Premium & discount',
       teach: [
         {
-          emoji: '🏷️',
           heading: 'Buy low, sell high — measured',
+          chart: CHARTS.premiumDiscount,
           body: 'Draw a range from a swing low to high. The upper half is "premium" (good for selling), the lower half is "discount" (good for buying). The 50% line is equilibrium.',
         },
       ],
@@ -580,8 +581,8 @@ const ICT: Track = {
       title: 'OTE & kill zones',
       teach: [
         {
-          emoji: '🎯',
           heading: 'Optimal Trade Entry (OTE)',
+          chart: CHARTS.ote,
           body: 'After a structure break, the OTE is the 62–79% Fibonacci retracement zone — where risk is small and reward is large.',
         },
         {
@@ -623,8 +624,8 @@ const ICT: Track = {
       title: 'Market structure shift',
       teach: [
         {
-          emoji: '🔀',
           heading: 'The trend cracks',
+          chart: CHARTS.structureBreak,
           body: 'A Market Structure Shift (MSS) is a decisive break of the most recent swing WITH displacement — a higher-confidence reversal signal than a plain CHoCH. It’s often the trigger to start hunting entries.',
         },
       ],
@@ -659,8 +660,8 @@ const ICT: Track = {
       title: 'Buy-side vs sell-side',
       teach: [
         {
-          emoji: '💦',
           heading: 'Where the stops sit',
+          chart: CHARTS.liquidityTypes,
           body: 'Buy-side liquidity rests ABOVE old highs (short-stops + breakout buys). Sell-side liquidity rests BELOW old lows. Price often runs one pool, then reverses toward the other.',
         },
       ],
@@ -707,8 +708,8 @@ const ELLIOTT: Track = {
       title: 'The 5-3 structure',
       teach: [
         {
-          emoji: '🌊',
           heading: 'Five up, three back',
+          chart: CHARTS.waves,
           body: 'A full cycle = 5 impulse waves (1-2-3-4-5) in the trend’s direction, then a 3-wave correction (A-B-C) against it.',
         },
         {

@@ -1,4 +1,5 @@
 import type { Track, SimpleCandle } from './types';
+import { CHARTS } from './charts';
 
 const c = (o: number, h: number, l: number, cl: number): SimpleCandle => ({ o, h, l, c: cl });
 
@@ -18,8 +19,8 @@ const CANDLES: Track = {
       title: 'The Doji',
       teach: [
         {
-          emoji: '➕',
           heading: 'A standoff',
+          chart: CHARTS.doji,
           body: 'A doji has almost no body — open and close are nearly equal. Buyers and sellers fought to a draw: indecision. Often a hint that a trend is tiring.',
         },
       ],
@@ -60,8 +61,8 @@ const CANDLES: Track = {
       title: 'Hammer & hanging man',
       teach: [
         {
-          emoji: '🔨',
           heading: 'Long lower wick',
+          chart: CHARTS.hammer,
           body: 'A hammer has a small body up top and a long lower wick — sellers pushed down but buyers slammed it back. At the bottom of a downtrend it’s bullish. The exact same shape at the top is a bearish "hanging man".',
         },
       ],
@@ -102,8 +103,8 @@ const CANDLES: Track = {
       title: 'Shooting star',
       teach: [
         {
-          emoji: '🌠',
           heading: 'Long upper wick',
+          chart: CHARTS.shootingStar,
           body: 'A shooting star is the hammer’s mirror: small body at the bottom, long upper wick. Buyers pushed up but sellers crushed it back. At the top of an uptrend it warns of a reversal down.',
         },
       ],
@@ -146,8 +147,8 @@ const CANDLES: Track = {
       title: 'Engulfing patterns',
       teach: [
         {
-          emoji: '🟩',
           heading: 'One candle swallows the last',
+          chart: CHARTS.engulfing,
           body: 'A bullish engulfing is a big green candle that fully covers the prior red body — buyers took over. A bearish engulfing is the opposite. Two candles, a clear power shift.',
         },
       ],
@@ -188,8 +189,8 @@ const CANDLES: Track = {
       title: 'Stars & soldiers',
       teach: [
         {
-          emoji: '🌅',
           heading: 'Morning & evening star',
+          chart: CHARTS.morningStar,
           body: 'A morning star is a 3-candle bullish reversal: big red, small indecision candle, then big green. The evening star is its bearish mirror at a top.',
         },
         {
@@ -242,8 +243,8 @@ const PATTERNS: Track = {
       title: 'Head & shoulders',
       teach: [
         {
-          emoji: '👤',
           heading: 'Three peaks, middle highest',
+          chart: CHARTS.headShoulders,
           body: 'Head & shoulders is a top reversal: a peak (shoulder), a higher peak (head), a lower peak (shoulder). Breaking the "neckline" connecting the lows confirms a move down. Flip it upside-down for the bullish inverse H&S.',
         },
       ],
@@ -276,8 +277,8 @@ const PATTERNS: Track = {
       title: 'Double top & bottom',
       teach: [
         {
-          emoji: 'Ⓜ️',
           heading: 'M and W shapes',
+          chart: CHARTS.doubleTop,
           body: 'A double top (an "M") forms two peaks at a similar level — buyers fail twice, bearish. A double bottom (a "W") forms two equal lows — sellers fail twice, bullish.',
         },
       ],
@@ -348,8 +349,8 @@ const PATTERNS: Track = {
       title: 'Flags & pennants',
       teach: [
         {
-          emoji: '🚩',
           heading: 'A pause, then continue',
+          chart: CHARTS.bullFlag,
           body: 'A flag is a sharp move (the "pole") followed by a small counter-trend channel, then a breakout the same way. Pennants are the same idea but the consolidation is a tiny triangle. Both are continuation patterns.',
         },
       ],
@@ -630,8 +631,8 @@ const MINDSET: Track = {
       title: 'Position sizing',
       teach: [
         {
-          emoji: '📏',
           heading: 'Size from your stop',
+          chart: CHARTS.slTp,
           body: 'Decide your risk first (say 1% of the account), then size the trade so that hitting your stop-loss only loses that 1%. Big stop → smaller position. The market sets the size, not your excitement.',
         },
       ],
@@ -664,8 +665,8 @@ const MINDSET: Track = {
       title: 'Win rate vs R:R',
       teach: [
         {
-          emoji: '🧮',
           heading: 'You can lose more than you win',
+          chart: CHARTS.riskReward,
           body: 'With a 1:3 reward-to-risk, you only need to win ~1 in 4 trades to break even. Great traders are often "wrong" half the time — their winners are just bigger than their losers.',
         },
       ],
@@ -698,8 +699,8 @@ const MINDSET: Track = {
       title: 'FOMO',
       teach: [
         {
-          emoji: '😱',
           heading: 'Fear of missing out',
+          chart: CHARTS.fomo,
           body: 'FOMO is chasing a move you already missed — buying the top because you can’t stand watching it run. It produces late entries with terrible risk-to-reward. There’s always another trade.',
         },
       ],
@@ -885,8 +886,8 @@ const WYCKOFF: Track = {
       title: 'Accumulation & the Spring',
       teach: [
         {
-          emoji: '🛒',
           heading: 'Building a base',
+          chart: CHARTS.spring,
           body: 'After a downtrend, price ranges sideways while the operator buys. The key signal is the Spring — a quick dip below support that snaps back, trapping sellers and grabbing liquidity before the markup.',
         },
       ],
@@ -927,8 +928,8 @@ const WYCKOFF: Track = {
       title: 'Distribution & UTAD',
       teach: [
         {
-          emoji: '📦',
           heading: 'Unloading at the top',
+          chart: CHARTS.utad,
           body: 'After an uptrend, price ranges while the operator sells to the crowd. The mirror of the spring is the Upthrust After Distribution (UTAD) — a false breakout above resistance that fails, trapping buyers before the markdown.',
         },
       ],
@@ -1085,8 +1086,8 @@ const FIB: Track = {
       title: 'The golden pocket',
       teach: [
         {
-          emoji: '🪙',
           heading: '0.618 — the golden ratio',
+          chart: CHARTS.goldenPocket,
           body: 'The 61.8% level comes from the golden ratio found throughout nature. The zone between 61.8% and 65% is the "golden pocket" — a favorite high-probability entry area.',
         },
       ],
