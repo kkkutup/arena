@@ -18,14 +18,6 @@ import { useMyCompetitions } from '@/store/competitions';
 import { useTrade } from '@/store/trade';
 import { useStoresHydrated } from '@/store/persist';
 import { colors } from '@/theme/tokens';
-
-// Stable list so the hydration hook doesn't re-subscribe every render.
-const PERSISTED = [useSession, useTheme, useWallet, useLessons, useMyCompetitions, useTrade];
-
-// Don't freeze inactive screens: they subscribe to the theme store, and a
-// frozen screen misses store updates and won't re-render on unfreeze — which
-// left some tabs stuck on the old palette after a night-mode toggle.
-enableFreeze(false);
 import {
   useFonts,
   Nunito_400Regular,
@@ -34,6 +26,14 @@ import {
   Nunito_800ExtraBold,
   Nunito_900Black,
 } from '@expo-google-fonts/nunito';
+
+// Stable list so the hydration hook doesn't re-subscribe every render.
+const PERSISTED = [useSession, useTheme, useWallet, useLessons, useMyCompetitions, useTrade];
+
+// Don't freeze inactive screens: they subscribe to the theme store, and a
+// frozen screen misses store updates and won't re-render on unfreeze — which
+// left some tabs stuck on the old palette after a night-mode toggle.
+enableFreeze(false);
 
 void SplashScreen.preventAutoHideAsync();
 
