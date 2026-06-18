@@ -2,6 +2,7 @@ import type { Track, Lesson, SimpleCandle } from './types';
 import { FREE_EXTRA, PREMIUM_EXTRA } from './curriculum2';
 import { FREE_EXTRA3, PREMIUM_EXTRA3 } from './curriculum3';
 import { FREE_EXTRA4 } from './curriculum4';
+import { FREE_EXTRA5, PREMIUM_EXTRA5 } from './curriculum5';
 import { CHARTS } from './charts';
 
 // Small hand-crafted candle series for the "spot it on the chart" exercises.
@@ -896,10 +897,12 @@ export const TRACKS: Track[] = [
   ...FREE_EXTRA,
   ...FREE_EXTRA3,
   ...FREE_EXTRA4,
+  ...FREE_EXTRA5,
   ICT,
   ELLIOTT,
   ...PREMIUM_EXTRA,
   ...PREMIUM_EXTRA3,
+  ...PREMIUM_EXTRA5,
 ];
 
 export function getTrack(id: string): Track | undefined {

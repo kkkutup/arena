@@ -1034,6 +1034,42 @@ const WYCKOFF: Track = {
         },
       ],
     },
+    {
+      id: 'w-dist-events',
+      title: 'Distribution events',
+      teach: [
+        {
+          heading: 'Topping signals',
+          body: 'The mirror of accumulation: a Buying Climax (BC) — euphoric high on huge volume; an Automatic Reaction (AR); an Upthrust (UT) and the UTAD; a Sign of Weakness (SOW); and the Last Point of Supply (LPSY) — the lower high before markdown.',
+          chart: CHARTS.utad,
+        },
+      ],
+      exercises: [
+        {
+          kind: 'match',
+          prompt: 'Match the distribution event to its meaning.',
+          pairs: [
+            { a: 'Buying climax', b: 'Euphoric high, huge volume' },
+            { a: 'Sign of weakness', b: 'Strong drop out of range' },
+            { a: 'Last point of supply', b: 'Lower high before markdown' },
+          ],
+          explain: 'BC = euphoria, SOW = weakness, LPSY = the launch-down.',
+        },
+        {
+          kind: 'choice',
+          prompt: 'The Buying Climax is marked by…',
+          options: ['Euphoric buying on high volume', 'Quiet drifting', 'A spring'],
+          answer: 0,
+          explain: 'Maximum greed and volume — the opposite of a selling climax.',
+        },
+        {
+          kind: 'order',
+          prompt: 'Order these distribution events (first → last).',
+          items: ['Buying climax', 'Upthrust (UTAD)', 'Sign of weakness', 'Last point of supply'],
+          explain: 'Euphoria, the trap, weakness, then the lower high.',
+        },
+      ],
+    },
   ],
 };
 
@@ -1242,8 +1278,8 @@ const HARMONIC: Track = {
       title: 'The ABCD',
       teach: [
         {
-          emoji: '🔠',
           heading: 'The simplest harmonic',
+          chart: CHARTS.abcd,
           body: 'In an ABCD, the AB and CD legs are roughly equal. BC retraces 61.8–78.6% of AB, and CD is often a 127–161.8% extension of BC. Point D is the reversal.',
         },
       ],
@@ -1275,8 +1311,8 @@ const HARMONIC: Track = {
       title: 'The Gartley',
       teach: [
         {
-          emoji: '🅖',
           heading: 'The classic XABCD',
+          chart: CHARTS.xabcd,
           body: 'In a Gartley, B retraces ~61.8% of the XA leg, and D completes near 78.6% of XA — a high-probability reversal with a tight stop just beyond X.',
         },
       ],
@@ -1309,8 +1345,8 @@ const HARMONIC: Track = {
       title: 'Bat & Butterfly',
       teach: [
         {
-          emoji: '🦇',
           heading: 'Deep vs extended',
+          chart: CHARTS.xabcd,
           body: 'The Bat completes D at ~88.6% of XA — deep, but still inside the move. The Butterfly extends D BEYOND X (~127% of XA), catching a reversal at a brand-new extreme.',
         },
       ],
