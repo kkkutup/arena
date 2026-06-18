@@ -185,4 +185,15 @@ export const CHARTS = {
     candles: [c(100, 110, 99, 109), c(109, 110, 104, 105), c(105, 106, 102, 103), c(103, 111, 102, 110)],
     zones: [{ from: 1, to: 2, low: 102.5, high: 104.5, label: '0.618', color: GOLD }],
   },
+  liquidation: {
+    candles: [c(104, 105, 103, 104), c(104, 104.5, 101, 102), c(102, 102.5, 98, 99), c(99, 99.5, 95, 96), c(96, 97, 93, 94)],
+    zones: [{ from: 0, to: 4, low: 92, high: 95, label: 'Liquidation', color: DOWN }],
+  },
+  valueArea: {
+    candles: [c(102, 108, 101, 107), c(107, 108, 103, 104), c(104, 109, 103, 108), c(108, 109, 102, 103), c(103, 108, 102, 107)],
+    zones: [
+      { from: 0, to: 4, low: 102, high: 108, label: 'Value area', color: GOLD },
+      { from: 0, to: 4, low: 104, high: 106, label: 'POC', color: PRIM },
+    ],
+  },
 } satisfies Record<string, ChartSpec>;
