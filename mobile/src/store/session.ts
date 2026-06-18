@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jsonStorage } from '@/store/persist';
 import type { Me } from '@/api/types';
 import type { AuthSession } from '@/api/auth';
 import { useWallet } from '@/store/wallet';
@@ -36,7 +38,9 @@ interface SessionState {
   signOut: () => void;
 }
 
-export const useSession = create<SessionState>((set) => ({
+export const useSession = create<SessionState>()(
+  persist(
+    (set) => ({
   user: null,
   accessToken: null,
   refreshToken: null,
@@ -138,4 +142,21 @@ export const useSession = create<SessionState>((set) => ({
       streakDate: null,
     });
   },
-}));
+    }),
+    {
+      name: 'arena-session',
+      storage: jsonStorage,
+      partialize: (s) => ({
+        user: s.user,
+        accessToken: s.accessToken,
+        refreshToken: s.refreshToken,
+        needsProfile: s.needsProfile,
+        tourSeen: s.tourSeen,
+        btTourSeen: s.btTourSeen,
+        dailyXp: s.dailyXp,
+        dailyXpDate: s.dailyXpDate,
+        streakDate: s.streakDate,
+      }),
+    },
+  ),
+);

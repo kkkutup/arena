@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jsonStorage } from '@/store/persist';
 import { getTrack, TRACKS } from '@/features/lessons/curriculum';
 import type { IconName } from '@/ui/Icon';
 
@@ -32,9 +34,11 @@ interface LessonsState {
   reset: () => void;
 }
 
-export const useLessons = create<LessonsState>((set, get) => ({
-  completed: {},
-  awarded: {},
+export const useLessons = create<LessonsState>()(
+  persist(
+    (set, get) => ({
+      completed: {},
+      awarded: {},
 
   complete: (lessonId) => set((s) => ({ completed: { ...s.completed, [lessonId]: true } })),
 
@@ -84,5 +88,12 @@ export const useLessons = create<LessonsState>((set, get) => ({
     return null;
   },
 
-  reset: () => set({ completed: {}, awarded: {} }),
-}));
+      reset: () => set({ completed: {}, awarded: {} }),
+    }),
+    {
+      name: 'arena-lessons',
+      storage: jsonStorage,
+      partialize: (s) => ({ completed: s.completed, awarded: s.awarded }),
+    },
+  ),
+);

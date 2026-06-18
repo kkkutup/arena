@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jsonStorage } from '@/store/persist';
 
 // Diamonds — Arena's soft currency. Earned by playing (daily login, ads),
 // spent to create/join competitions. Real-money purchase (Google Pay) is
@@ -35,30 +37,39 @@ interface WalletState {
   closeStore: () => void;
 }
 
-export const useWallet = create<WalletState>((set, get) => ({
-  balance: DIAMOND.START,
-  lastDailyClaim: null,
-  storeOpen: false,
+export const useWallet = create<WalletState>()(
+  persist(
+    (set, get) => ({
+      balance: DIAMOND.START,
+      lastDailyClaim: null,
+      storeOpen: false,
 
-  reset: () => set({ balance: DIAMOND.START, lastDailyClaim: null, storeOpen: false }),
+      reset: () => set({ balance: DIAMOND.START, lastDailyClaim: null, storeOpen: false }),
 
-  claimDaily: () => {
-    const t = today();
-    if (get().lastDailyClaim === t) return 0;
-    set((s) => ({ balance: s.balance + DIAMOND.DAILY, lastDailyClaim: t }));
-    return DIAMOND.DAILY;
-  },
+      claimDaily: () => {
+        const t = today();
+        if (get().lastDailyClaim === t) return 0;
+        set((s) => ({ balance: s.balance + DIAMOND.DAILY, lastDailyClaim: t }));
+        return DIAMOND.DAILY;
+      },
 
-  add: (n) => set((s) => ({ balance: s.balance + n })),
+      add: (n) => set((s) => ({ balance: s.balance + n })),
 
-  canAfford: (n) => get().balance >= n,
+      canAfford: (n) => get().balance >= n,
 
-  spend: (n) => {
-    if (get().balance < n) return false;
-    set((s) => ({ balance: s.balance - n }));
-    return true;
-  },
+      spend: (n) => {
+        if (get().balance < n) return false;
+        set((s) => ({ balance: s.balance - n }));
+        return true;
+      },
 
-  openStore: () => set({ storeOpen: true }),
-  closeStore: () => set({ storeOpen: false }),
-}));
+      openStore: () => set({ storeOpen: true }),
+      closeStore: () => set({ storeOpen: false }),
+    }),
+    {
+      name: 'arena-wallet',
+      storage: jsonStorage,
+      partialize: (s) => ({ balance: s.balance, lastDailyClaim: s.lastDailyClaim }),
+    },
+  ),
+);

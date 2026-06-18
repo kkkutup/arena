@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jsonStorage } from '@/store/persist';
 import { applyTheme, type ThemeMode } from '@/theme/tokens';
 
 // Night mode. The palette lives in tokens (`colors`, mutated in place by
@@ -12,15 +14,28 @@ interface ThemeState {
   toggle: () => void;
 }
 
-export const useTheme = create<ThemeState>((set, get) => ({
-  mode: 'light',
-  rev: 0,
-  setMode: (mode) => {
-    applyTheme(mode);
-    set((s) => ({ mode, rev: s.rev + 1 }));
-  },
-  toggle: () => get().setMode(get().mode === 'light' ? 'dark' : 'light'),
-}));
+export const useTheme = create<ThemeState>()(
+  persist(
+    (set, get) => ({
+      mode: 'light',
+      rev: 0,
+      setMode: (mode) => {
+        applyTheme(mode);
+        set((s) => ({ mode, rev: s.rev + 1 }));
+      },
+      toggle: () => get().setMode(get().mode === 'light' ? 'dark' : 'light'),
+    }),
+    {
+      name: 'arena-theme',
+      storage: jsonStorage,
+      partialize: (s) => ({ mode: s.mode }),
+      // Re-apply the saved palette once it's read back from storage.
+      onRehydrateStorage: () => (state) => {
+        if (state) applyTheme(state.mode);
+      },
+    },
+  ),
+);
 
 // Subscribe a component to theme changes so it re-renders (and re-reads the
 // live `colors`) when the mode flips. Returns the current mode.

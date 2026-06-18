@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jsonStorage } from '@/store/persist';
 import type { Competition, CompetitionType } from '@/api/types';
 
 // Client-side source of truth for the competitions a user has created or joined.
@@ -28,8 +30,10 @@ interface CompetitionsState {
   reset: () => void;
 }
 
-export const useMyCompetitions = create<CompetitionsState>((set, get) => ({
-  mine: [],
+export const useMyCompetitions = create<CompetitionsState>()(
+  persist(
+    (set, get) => ({
+      mine: [],
 
   create: (input) => {
     const now = Date.now();
@@ -93,7 +97,14 @@ export const useMyCompetitions = create<CompetitionsState>((set, get) => ({
     return joined;
   },
 
-  getById: (id) => get().mine.find((c) => c.id === id),
+      getById: (id) => get().mine.find((c) => c.id === id),
 
-  reset: () => set({ mine: [] }),
-}));
+      reset: () => set({ mine: [] }),
+    }),
+    {
+      name: 'arena-competitions',
+      storage: jsonStorage,
+      partialize: (s) => ({ mine: s.mine }),
+    },
+  ),
+);

@@ -10,8 +10,17 @@ import { TourOverlay } from '@/features/tour/TourOverlay';
 import { DiamondStoreSheet } from '@/features/wallet/DiamondStoreSheet';
 import { enableFreeze } from 'react-native-screens';
 import * as SystemUI from 'expo-system-ui';
-import { useThemeSync } from '@/store/theme';
+import { useTheme, useThemeSync } from '@/store/theme';
+import { useSession } from '@/store/session';
+import { useWallet } from '@/store/wallet';
+import { useLessons } from '@/store/lessons';
+import { useMyCompetitions } from '@/store/competitions';
+import { useTrade } from '@/store/trade';
+import { useStoresHydrated } from '@/store/persist';
 import { colors } from '@/theme/tokens';
+
+// Stable list so the hydration hook doesn't re-subscribe every render.
+const PERSISTED = [useSession, useTheme, useWallet, useLessons, useMyCompetitions, useTrade];
 
 // Don't freeze inactive screens: they subscribe to the theme store, and a
 // frozen screen misses store updates and won't re-render on unfreeze — which
@@ -34,6 +43,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const mode = useThemeSync();
+  const hydrated = useStoresHydrated(PERSISTED);
   const [fontsLoaded] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -42,16 +52,18 @@ export default function RootLayout() {
     Nunito_900Black,
   });
 
+  const ready = fontsLoaded && hydrated;
+
   useEffect(() => {
-    if (fontsLoaded) void SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
 
   // Tint the root window (under/behind screens + status bar) to match the theme.
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(colors.bg);
   }, [mode]);
 
-  if (!fontsLoaded) return null;
+  if (!ready) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>

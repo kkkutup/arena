@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jsonStorage } from '@/store/persist';
 import type { Side } from '@/api/types';
 import { marginRequired, liquidationPrice, unrealizedPnl } from '@/features/trade/engine';
 
@@ -57,8 +59,10 @@ const blank = (startingBalance: number): Account => ({
   history: [],
 });
 
-export const useTrade = create<TradeState>((set, get) => ({
-  accounts: {},
+export const useTrade = create<TradeState>()(
+  persist(
+    (set, get) => ({
+      accounts: {},
 
   ensure: (key, startingBalance) =>
     set((st) =>
@@ -130,8 +134,15 @@ export const useTrade = create<TradeState>((set, get) => ({
       };
     }),
 
-  resetAll: () => set({ accounts: {} }),
-}));
+      resetAll: () => set({ accounts: {} }),
+    }),
+    {
+      name: 'arena-trade',
+      storage: jsonStorage,
+      partialize: (s) => ({ accounts: s.accounts }),
+    },
+  ),
+);
 
 function toClosed(p: OpenPosition, closePrice: number, pnl: number, liquidated: boolean): ClosedTrade {
   return {
