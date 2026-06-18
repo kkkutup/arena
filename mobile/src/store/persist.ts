@@ -1,13 +1,59 @@
 import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createJSONStorage } from 'zustand/middleware';
+import { createJSONStorage, type StateStorage } from 'zustand/middleware';
 
-// Shared AsyncStorage-backed JSON storage for zustand persist.
-// NOTE: AsyncStorage is a NATIVE module — it only works in a dev/production
-// build that includes it. On a build without it, persist logs a warning and
-// the app simply runs in-memory (no crash); persistence kicks in after the
-// next EAS build.
-export const jsonStorage = createJSONStorage(() => AsyncStorage);
+// AsyncStorage is a NATIVE module. If the running build doesn't include it
+// (e.g. an older dev build), touching it throws "NativeModule is null". So we
+// load it defensively and wrap every call in try/catch, falling back to an
+// in-memory map — the app then runs fine WITHOUT persistence, and real
+// persistence kicks in for free once you're on a build that bundles
+// AsyncStorage. Never crashes either way.
+type AS = { getItem: (k: string) => Promise<string | null>; setItem: (k: string, v: string) => Promise<void>; removeItem: (k: string) => Promise<void> };
+let AsyncStorage: AS | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch {
+  AsyncStorage = null;
+}
+
+const memory = new Map<string, string>();
+
+const safeStorage: StateStorage = {
+  getItem: async (name) => {
+    if (AsyncStorage) {
+      try {
+        return await AsyncStorage.getItem(name);
+      } catch {
+        AsyncStorage = null;
+      }
+    }
+    return memory.get(name) ?? null;
+  },
+  setItem: async (name, value) => {
+    if (AsyncStorage) {
+      try {
+        await AsyncStorage.setItem(name, value);
+        return;
+      } catch {
+        AsyncStorage = null;
+      }
+    }
+    memory.set(name, value);
+  },
+  removeItem: async (name) => {
+    if (AsyncStorage) {
+      try {
+        await AsyncStorage.removeItem(name);
+        return;
+      } catch {
+        AsyncStorage = null;
+      }
+    }
+    memory.delete(name);
+  },
+};
+
+export const jsonStorage = createJSONStorage(() => safeStorage);
 
 type Persisted = {
   persist: { hasHydrated: () => boolean; onFinishHydration: (cb: () => void) => () => void };
