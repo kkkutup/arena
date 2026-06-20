@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Rect, Line } from 'react-native-svg';
 import { colors } from '@/theme/tokens';
@@ -10,7 +10,7 @@ export interface PriceLine {
   dashed?: boolean;
 }
 
-export function CandleChart({
+export const CandleChart = memo(function CandleChart({
   candles,
   width,
   height,
@@ -108,4 +108,4 @@ export function CandleChart({
       })}
     </Svg>
   );
-}
+});

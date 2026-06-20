@@ -55,6 +55,33 @@ export interface Position {
   status: PositionStatus;
 }
 
+export interface Candle {
+  time: number; // unix seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+export interface OpenPositionInput {
+  symbol: string;
+  side: Side;
+  qty: number;
+  leverage: number;
+}
+
+// Server account state inside a competition (GET/POST .../positions).
+export interface CompetitionAccount {
+  competitionId: string;
+  cashBalance: number;
+  equity: number;
+  usedMargin: number;
+  freeMargin: number;
+  startingBalance: number;
+  totalPnl: number;
+  positions: Position[];
+}
+
 export interface Competition {
   id: string;
   name: string;
@@ -71,6 +98,16 @@ export interface Competition {
   myRank?: number;
   myEquity?: number;
   myReturnPct?: number;
+}
+
+// Input for creating a competition — mirrors the backend CreateCompetitionDto.
+export interface CreateInput {
+  name: string;
+  type: CompetitionType;
+  instruments: string[];
+  durationHours: number;
+  startingBalance: number;
+  maxLeverage: number;
 }
 
 export interface LeaderboardRow {
@@ -119,4 +156,24 @@ export interface ActivityItem {
   avatarUrl: string | null;
   text: string;
   at: string; // ISO
+}
+
+export type RankingMetric = 'xp' | 'wins';
+
+export interface RankRow {
+  rank: number;
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  xp: number;
+  level: number;
+  wins: number;
+  isMe: boolean;
+}
+
+export interface RankingResponse {
+  metric: RankingMetric;
+  rows: RankRow[];
+  me: RankRow | null;
 }

@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import WebSocket from 'ws';
 import { INSTRUMENTS, SYMBOLS } from './instruments';
@@ -24,8 +29,10 @@ export class MarketService implements OnModuleInit, OnModuleDestroy {
   private readonly wsUrl: string;
 
   constructor(config: ConfigService) {
-    this.rest = config.get<string>('BINANCE_REST') ?? 'https://data-api.binance.vision';
-    this.wsUrl = config.get<string>('BINANCE_WS') ?? 'wss://data-stream.binance.vision/ws';
+    this.rest =
+      config.get<string>('BINANCE_REST') ?? 'https://data-api.binance.vision';
+    this.wsUrl =
+      config.get<string>('BINANCE_WS') ?? 'wss://data-stream.binance.vision/ws';
   }
 
   async onModuleInit(): Promise<void> {
@@ -102,7 +109,11 @@ export class MarketService implements OnModuleInit, OnModuleDestroy {
     return this.updatedAt;
   }
 
-  async getCandles(symbol: string, interval = '1m', limit = 200): Promise<Candle[]> {
+  async getCandles(
+    symbol: string,
+    interval = '1m',
+    limit = 200,
+  ): Promise<Candle[]> {
     const url = `${this.rest}/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
     const res = await fetch(url);
     if (!res.ok) return [];

@@ -64,7 +64,7 @@ function makeInitial(): PriceEngine {
 // (not in-place mutation) and stores them in state, so the chart, price, and
 // live P&L all re-render — even under React's compiler memoization, which would
 // otherwise serve a stale value from a ref whose identity never changes.
-export function usePriceEngine(accountKey: string): PriceEngine {
+export function usePriceEngine(accountKey: string, enabled = true): PriceEngine {
   const dataRef = useRef<PriceEngine | null>(null);
   if (!dataRef.current) dataRef.current = makeInitial();
 
@@ -73,6 +73,7 @@ export function usePriceEngine(accountKey: string): PriceEngine {
   const settleLiquidation = useTrade((s) => s.settleLiquidation);
 
   useEffect(() => {
+    if (!enabled) return;
     const id = setInterval(() => {
       const prev = dataRef.current!;
       tick.current += 1;
@@ -113,7 +114,7 @@ export function usePriceEngine(accountKey: string): PriceEngine {
       setEngine(nextEngine);
     }, TICK_MS);
     return () => clearInterval(id);
-  }, [settleLiquidation, accountKey]);
+  }, [settleLiquidation, accountKey, enabled]);
 
   return engine;
 }

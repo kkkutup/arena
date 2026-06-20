@@ -1,14 +1,11 @@
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Button, Card, Icon, EmptyState } from '@/ui';
-import { usePublicCompetitions, useDivision } from '@/hooks/queries';
+import { usePublicCompetitions, useDivision, useCompetitions, useRanking } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
 import { tierMeta } from '@/features/competitions/util';
-import { useMyCompetitions } from '@/store/competitions';
 import { useThemeSync } from '@/store/theme';
-import { useSession } from '@/store/session';
-import { myRank } from '@/features/ranking/global';
 import { useIsFresh } from '@/hooks/useIsFresh';
 import type { Division } from '@/api/types';
 import { colors, spacing, radius } from '@/theme/tokens';
@@ -18,11 +15,10 @@ export default function Compete() {
   useThemeSync();
   const router = useRouter();
   const fresh = useIsFresh();
-  const user = useSession((s) => s.user);
   const pub = usePublicCompetitions();
   const div = useDivision();
-  const myComps = useMyCompetitions((s) => s.mine);
-  const rank = myRank(user?.displayName || user?.username || 'You', user?.stats.xp ?? 0);
+  const myComps = useCompetitions().data ?? [];
+  const me = useRanking('xp').data?.me;
 
   return (
     <Screen>
@@ -68,7 +64,7 @@ export default function Compete() {
           <View style={{ flex: 1 }}>
             <Txt variant="h3">Global ranking</Txt>
             <Txt variant="small" color={colors.muted}>
-              You're #{rank.rank} of {rank.total} · earn XP to climb
+              {me ? `You're #${me.rank} · earn XP to climb` : 'Earn XP to climb the board'}
             </Txt>
           </View>
           <Icon name="chevron-forward" size={22} color={colors.faint} />

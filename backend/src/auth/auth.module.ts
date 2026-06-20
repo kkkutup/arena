@@ -14,7 +14,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
         secret: config.getOrThrow<string>('JWT_SECRET'),
         // expiresIn accepts an ms-style string at runtime; cast to satisfy types.
         signOptions: {
-          expiresIn: (config.get<string>('JWT_ACCESS_TTL') ?? '15m') as unknown as number,
+          expiresIn: (config.get<string>('JWT_ACCESS_TTL') ??
+            '15m') as unknown as number,
         },
       }),
     }),

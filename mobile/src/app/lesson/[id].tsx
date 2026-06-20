@@ -12,6 +12,7 @@ import { useLessons } from '@/store/lessons';
 import { useCelebration } from '@/store/celebration';
 import { useThemeSync } from '@/store/theme';
 import { colors, spacing, radius } from '@/theme/tokens';
+import { api } from '@/api';
 
 type Step = { type: 'teach'; card: TeachCard } | { type: 'ex'; ex: Exercise };
 
@@ -50,7 +51,10 @@ export default function LessonPlayer() {
     const perfect = correctRef.current === exCount;
     const value = correctRef.current * 5 + (perfect ? 10 : 0);
     const delta = grantXp(id, value);
-    if (delta > 0) addXp(delta);
+    if (delta > 0) {
+      addXp(delta);
+      void api.addXp(delta); // mirror XP to the server (global ranking)
+    }
     completeLesson(id);
     setAwarded(delta);
     setFinished(true);

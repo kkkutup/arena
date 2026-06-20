@@ -18,13 +18,20 @@ export class LiquidationService {
     const prices = this.market.getPrices();
     if (Object.keys(prices).length === 0) return;
 
-    const open = await this.prisma.position.findMany({ where: { status: 'OPEN' } });
+    const open = await this.prisma.position.findMany({
+      where: { status: 'OPEN' },
+    });
     let liquidated = 0;
     for (const p of open) {
       const price = prices[p.symbol];
       if (price === undefined) continue;
-      if (isLiquidated(p.side as Side, p.liquidationPrice, price)) {
-        const pnl = unrealizedPnl(p.side as Side, p.qty, p.entryPrice, p.liquidationPrice);
+      if (isLiquidated(p.side, p.liquidationPrice, price)) {
+        const pnl = unrealizedPnl(
+          p.side,
+          p.qty,
+          p.entryPrice,
+          p.liquidationPrice,
+        );
         await this.prisma.$transaction([
           this.prisma.position.update({
             where: { id: p.id },

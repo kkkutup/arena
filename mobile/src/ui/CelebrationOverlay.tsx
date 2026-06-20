@@ -5,6 +5,7 @@ import { Txt } from './Text';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { useCelebration } from '@/store/celebration';
+import { playSound } from '@/lib/sound';
 import { colors, spacing, radius, shadow } from '@/theme/tokens';
 
 // Full-screen celebratory moment (level-up / achievement / win), mounted once
@@ -18,6 +19,7 @@ export function CelebrationOverlay() {
     if (current) {
       scale.setValue(0);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      playSound('achievement');
       Animated.spring(scale, {
         toValue: 1,
         useNativeDriver: true,

@@ -5,6 +5,9 @@ import {
   MaxLength,
   Matches,
   IsOptional,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -58,4 +61,11 @@ export class SocialDto {
   @IsString()
   @MinLength(1)
   idToken!: string;
+}
+
+export class XpDto {
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  amount!: number;
 }

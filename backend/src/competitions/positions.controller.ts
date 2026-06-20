@@ -15,7 +15,11 @@ export class PositionsController {
   }
 
   @Post()
-  open(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: OpenPositionDto) {
+  open(
+    @CurrentUser() u: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: OpenPositionDto,
+  ) {
     return this.positions.open(u.userId, id, dto);
   }
 

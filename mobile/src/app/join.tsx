@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Button, TextField, Icon } from '@/ui';
 import { useWallet, DIAMOND } from '@/store/wallet';
-import { useMyCompetitions } from '@/store/competitions';
+import { useJoinByCode } from '@/hooks/queries';
 import { colors, spacing } from '@/theme/tokens';
 
 import { useThemeSync } from '@/store/theme';
@@ -13,22 +13,31 @@ export default function Join() {
   useThemeSync();
   const router = useRouter();
   const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const valid = code.trim().length >= 4;
   const spend = useWallet((s) => s.spend);
+  const canAfford = useWallet((s) => s.canAfford);
   const openStore = useWallet((s) => s.openStore);
-  const joinByCode = useMyCompetitions((s) => s.joinByCode);
+  const joinMut = useJoinByCode();
 
-  const join = () => {
-    if (!valid) return;
-    // Spend diamonds to join; if too poor, open the get-diamonds sheet.
-    if (!spend(DIAMOND.JOIN_COST)) {
+  const join = async () => {
+    if (!valid || joinMut.isPending) return;
+    setError(null);
+    // Check affordability up front; only deduct after the server confirms.
+    if (!canAfford(DIAMOND.JOIN_COST)) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       openStore();
       return;
     }
-    const c = joinByCode(code);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace({ pathname: '/competition/[id]', params: { id: c.id } });
+    try {
+      const c = await joinMut.mutateAsync(code);
+      spend(DIAMOND.JOIN_COST);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace({ pathname: '/competition/[id]', params: { id: c.id } });
+    } catch (e) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setError(e instanceof Error ? e.message : 'Could not join — check the code');
+    }
   };
 
   return (
@@ -68,7 +77,18 @@ export default function Join() {
           maxLength={10}
           style={{ textAlign: 'center', letterSpacing: 4, fontSize: 22 }}
         />
-        <Button label={`Join competition · ${DIAMOND.JOIN_COST} 💎`} full disabled={!valid} onPress={join} />
+        {error ? (
+          <Txt variant="small" color={colors.down} center>
+            {error}
+          </Txt>
+        ) : null}
+        <Button
+          label={`Join competition · ${DIAMOND.JOIN_COST} 💎`}
+          full
+          loading={joinMut.isPending}
+          disabled={!valid || joinMut.isPending}
+          onPress={join}
+        />
       </View>
     </Screen>
   );

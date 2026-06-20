@@ -13,7 +13,10 @@ export class MarketController {
 
   @Get('prices')
   prices() {
-    return { prices: this.market.getPrices(), updatedAt: this.market.getUpdatedAt() };
+    return {
+      prices: this.market.getPrices(),
+      updatedAt: this.market.getUpdatedAt(),
+    };
   }
 
   @Get('candles')
@@ -22,7 +25,8 @@ export class MarketController {
     @Query('interval') interval = '1m',
     @Query('limit') limit = '200',
   ) {
-    if (!symbol || !bySymbol(symbol)) throw new BadRequestException('Unknown symbol');
+    if (!symbol || !bySymbol(symbol))
+      throw new BadRequestException('Unknown symbol');
     const n = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 1000);
     const candles = await this.market.getCandles(symbol, interval, n);
     return { candles };

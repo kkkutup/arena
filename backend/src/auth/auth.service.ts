@@ -55,7 +55,10 @@ export class AuthService {
     }
     let payload;
     try {
-      const ticket = await this.googleClient.verifyIdToken({ idToken, audience: audiences });
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: audiences,
+      });
       payload = ticket.getPayload();
     } catch {
       throw new UnauthorizedException('Invalid Google token');
@@ -63,7 +66,13 @@ export class AuthService {
     if (!payload?.sub || !payload.email) {
       throw new UnauthorizedException('Invalid Google token');
     }
-    return this.socialSignIn('GOOGLE', payload.sub, payload.email, payload.name, payload.picture);
+    return this.socialSignIn(
+      'GOOGLE',
+      payload.sub,
+      payload.email,
+      payload.name,
+      payload.picture,
+    );
   }
 
   private async socialSignIn(
@@ -109,11 +118,16 @@ export class AuthService {
   }
 
   private async uniqueUsername(seed: string): Promise<string> {
-    let base = seed.toLowerCase().replace(/[^a-z0-9_.]/g, '').slice(0, 18);
+    let base = seed
+      .toLowerCase()
+      .replace(/[^a-z0-9_.]/g, '')
+      .slice(0, 18);
     if (base.length < 3) base = 'trader' + base;
     let candidate = base;
     for (let i = 0; i < 25; i++) {
-      const exists = await this.prisma.user.findUnique({ where: { username: candidate } });
+      const exists = await this.prisma.user.findUnique({
+        where: { username: candidate },
+      });
       if (!exists) return candidate;
       candidate = base.slice(0, 14) + Math.floor(Math.random() * 10000);
     }
@@ -137,7 +151,9 @@ export class AuthService {
         competitionsPlayed: s?.competitionsPlayed ?? 0,
         wins: s?.wins ?? 0,
         winRate:
-          s && s.competitionsPlayed > 0 ? (s.wins / s.competitionsPlayed) * 100 : 0,
+          s && s.competitionsPlayed > 0
+            ? (s.wins / s.competitionsPlayed) * 100
+            : 0,
       },
     };
   }
@@ -147,7 +163,8 @@ export class AuthService {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ email: e }, { username }] },
     });
-    if (existing) throw new ConflictException('Email or username already taken');
+    if (existing)
+      throw new ConflictException('Email or username already taken');
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
       data: {
@@ -168,7 +185,8 @@ export class AuthService {
       where: { email: email.toLowerCase().trim() },
       include: { stats: true },
     });
-    if (!user?.passwordHash) throw new UnauthorizedException('Invalid credentials');
+    if (!user?.passwordHash)
+      throw new UnauthorizedException('Invalid credentials');
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw new UnauthorizedException('Invalid credentials');
     return this.session(user);
@@ -176,7 +194,9 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     const tokenHash = sha256(refreshToken);
-    const row = await this.prisma.refreshToken.findUnique({ where: { tokenHash } });
+    const row = await this.prisma.refreshToken.findUnique({
+      where: { tokenHash },
+    });
     if (!row || row.revokedAt || row.expiresAt < new Date()) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -207,6 +227,19 @@ export class AuthService {
     });
     if (!user) throw new UnauthorizedException();
     return this.publicUser(user);
+  }
+
+  async addXp(userId: string, amount: number) {
+    const cur = await this.prisma.profileStats.findUnique({
+      where: { userId },
+    });
+    if (!cur) throw new UnauthorizedException();
+    const xp = cur.xp + amount;
+    await this.prisma.profileStats.update({
+      where: { userId },
+      data: { xp, level: Math.floor(xp / 100) + 1 },
+    });
+    return this.me(userId);
   }
 
   async updateMe(userId: string, dto: UpdateMeDto) {

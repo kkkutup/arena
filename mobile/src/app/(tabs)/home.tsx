@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { View, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import {
   Screen,
   Txt,
@@ -14,11 +14,10 @@ import {
 } from '@/ui';
 import type { IconName } from '@/ui/Icon';
 import { useSession } from '@/store/session';
-import { useActivity } from '@/hooks/queries';
+import { useActivity, useCompetitions } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
 import { TourTarget } from '@/features/tour/TourTarget';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
-import { useMyCompetitions } from '@/store/competitions';
 import { useLessons } from '@/store/lessons';
 import { useTour } from '@/store/tour';
 import { useWallet } from '@/store/wallet';
@@ -40,7 +39,7 @@ export default function Home() {
   const claimDaily = useWallet((s) => s.claimDaily);
   const celebrate = useCelebration((s) => s.celebrate);
   const router = useRouter();
-  const myComps = useMyCompetitions((s) => s.mine);
+  const myComps = useCompetitions().data ?? [];
   // Select the stable `completed` map (not a fresh object) to avoid an
   // infinite getSnapshot loop, then derive next lesson via memo.
   const lessonsCompleted = useLessons((s) => s.completed);
@@ -77,7 +76,9 @@ export default function Home() {
     grantDaily();
   }, [user, tourSeen, startTour, markTourSeen, claimDaily, celebrate]);
 
-  if (!user) return null;
+  // If the session ever clears while we're here, bounce to the auth flow
+  // instead of leaving a blank, stuck screen.
+  if (!user) return <Redirect href="/onboarding" />;
 
   // A brand-new account starts empty — show a clean slate, not demo data.
   const fresh =

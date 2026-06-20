@@ -14,7 +14,6 @@ import { useTheme, useThemeSync } from '@/store/theme';
 import { useSession } from '@/store/session';
 import { useWallet } from '@/store/wallet';
 import { useLessons } from '@/store/lessons';
-import { useMyCompetitions } from '@/store/competitions';
 import { useTrade } from '@/store/trade';
 import { useStoresHydrated } from '@/store/persist';
 import { colors } from '@/theme/tokens';
@@ -28,7 +27,7 @@ import {
 } from '@expo-google-fonts/nunito';
 
 // Stable list so the hydration hook doesn't re-subscribe every render.
-const PERSISTED = [useSession, useTheme, useWallet, useLessons, useMyCompetitions, useTrade];
+const PERSISTED = [useSession, useTheme, useWallet, useLessons, useTrade];
 
 // Don't freeze inactive screens: they subscribe to the theme store, and a
 // frozen screen misses store updates and won't re-render on unfreeze — which

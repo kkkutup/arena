@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Txt } from './Text';
+import { playSound } from '@/lib/sound';
 import { colors, fonts, radius, spacing } from '@/theme/tokens';
 
 type Variant = 'primary' | 'success' | 'danger' | 'neutral' | 'outline';
@@ -70,6 +71,7 @@ export function Button({
       onPress={() => {
         if (isDisabled) return;
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        playSound('tap');
         onPress?.();
       }}
       disabled={isDisabled}

@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Button, TextField, Icon } from '@/ui';
 import { INSTRUMENTS } from '@/mock/data';
 import { useWallet, DIAMOND } from '@/store/wallet';
-import { useMyCompetitions } from '@/store/competitions';
+import { useCreateCompetition } from '@/hooks/queries';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { fmtUsd } from '@/lib/format';
 import type { CompetitionType } from '@/api/types';
@@ -48,31 +48,40 @@ export default function CreateCompetition() {
   const [lev, setLev] = useState(20);
 
   const spend = useWallet((s) => s.spend);
+  const canAfford = useWallet((s) => s.canAfford);
   const openStore = useWallet((s) => s.openStore);
-  const createComp = useMyCompetitions((s) => s.create);
+  const createMut = useCreateCompetition();
+  const [error, setError] = useState<string | null>(null);
 
   const toggle = (s: string) =>
     setSymbols((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]));
   const valid = name.trim().length >= 3 && symbols.length > 0;
 
-  const create = () => {
-    if (!valid) return;
-    // Spend diamonds to create; if too poor, open the get-diamonds sheet.
-    if (!spend(DIAMOND.CREATE_COST)) {
+  const create = async () => {
+    if (!valid || createMut.isPending) return;
+    setError(null);
+    // Check affordability up front; only deduct after the server confirms.
+    if (!canAfford(DIAMOND.CREATE_COST)) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       openStore();
       return;
     }
-    const c = createComp({
-      name,
-      type,
-      instruments: symbols,
-      durationHours: dur,
-      startingBalance: bal,
-      maxLeverage: lev,
-    });
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace({ pathname: '/competition/[id]', params: { id: c.id } });
+    try {
+      const c = await createMut.mutateAsync({
+        name,
+        type,
+        instruments: symbols,
+        durationHours: dur,
+        startingBalance: bal,
+        maxLeverage: lev,
+      });
+      spend(DIAMOND.CREATE_COST);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace({ pathname: '/competition/[id]', params: { id: c.id } });
+    } catch (e) {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setError(e instanceof Error ? e.message : 'Could not create competition');
+    }
   };
 
   return (
@@ -130,10 +139,16 @@ export default function CreateCompetition() {
           ))}
         </Field>
 
+        {error ? (
+          <Txt variant="small" color={colors.down} center>
+            {error}
+          </Txt>
+        ) : null}
         <Button
           label={`Create competition · ${DIAMOND.CREATE_COST} 💎`}
           full
-          disabled={!valid}
+          loading={createMut.isPending}
+          disabled={!valid || createMut.isPending}
           onPress={create}
           style={{ marginTop: spacing.md }}
         />

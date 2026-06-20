@@ -51,7 +51,9 @@ export class CompetitionsService {
         status: 'LIVE',
         startAt: new Date(),
         endAt: new Date(Date.now() + dto.durationHours * 3_600_000),
-        participations: { create: { userId, cashBalance: dto.startingBalance } },
+        participations: {
+          create: { userId, cashBalance: dto.startingBalance },
+        },
       },
     });
     return this.detail(userId, comp.id);
@@ -71,13 +73,17 @@ export class CompetitionsService {
       include: { _count: { select: { participations: true } } },
     });
     if (!comp) throw new NotFoundException('Competition not found');
-    if (comp.status === 'FINISHED') throw new BadRequestException('Competition has ended');
+    if (comp.status === 'FINISHED')
+      throw new BadRequestException('Competition has ended');
 
     const existing = await this.prisma.participation.findUnique({
       where: { competitionId_userId: { competitionId, userId } },
     });
     if (!existing) {
-      if (comp.maxParticipants && comp._count.participations >= comp.maxParticipants) {
+      if (
+        comp.maxParticipants &&
+        comp._count.participations >= comp.maxParticipants
+      ) {
         throw new BadRequestException('Competition is full');
       }
       await this.prisma.participation.create({
@@ -88,7 +94,9 @@ export class CompetitionsService {
   }
 
   async leaderboardRows(competitionId: string) {
-    const comp = await this.prisma.competition.findUnique({ where: { id: competitionId } });
+    const comp = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+    });
     if (!comp) throw new NotFoundException('Competition not found');
     const parts = await this.prisma.participation.findMany({
       where: { competitionId },
@@ -104,7 +112,8 @@ export class CompetitionsService {
         username: p.user.username,
         avatarUrl: p.user.avatarUrl,
         equity,
-        returnPct: ((equity - comp.startingBalance) / comp.startingBalance) * 100,
+        returnPct:
+          ((equity - comp.startingBalance) / comp.startingBalance) * 100,
       };
     });
     rows.sort((a, b) => b.equity - a.equity);
@@ -174,6 +183,8 @@ export class CompetitionsService {
 
   async leaderboard(userId: string, competitionId: string) {
     const rows = await this.leaderboardRows(competitionId);
-    return { leaderboard: rows.map((r) => ({ ...r, isMe: r.userId === userId })) };
+    return {
+      leaderboard: rows.map((r) => ({ ...r, isMe: r.userId === userId })),
+    };
   }
 }

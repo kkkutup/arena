@@ -12,7 +12,11 @@ import {
   IsIn,
 } from 'class-validator';
 
-const COMPETITION_TYPES = ['PRIVATE_LEAGUE', 'DUEL', 'PUBLIC_DIVISION'] as const;
+const COMPETITION_TYPES = [
+  'PRIVATE_LEAGUE',
+  'DUEL',
+  'PUBLIC_DIVISION',
+] as const;
 
 export class CreateCompetitionDto {
   @IsString()

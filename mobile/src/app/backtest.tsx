@@ -20,6 +20,7 @@ import { TourTarget } from '@/features/tour/TourTarget';
 import { useThemeSync } from '@/store/theme';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { fmtPrice, fmtPct } from '@/lib/format';
+import { api } from '@/api';
 
 const MIN_PCT = 0.5;
 const MAX_PCT = 12;
@@ -139,6 +140,7 @@ export default function Backtest() {
   const finish = (res: Result) => {
     setPhase('done');
     addXp(res.points);
+    if (res.points > 0) void api.addXp(res.points); // mirror XP to the server (global ranking)
     // A successful (profitable) trade earns 1 diamond.
     if (res.win) addDiamonds(DIAMOND.TRADE_REWARD);
     void Haptics.notificationAsync(
@@ -147,6 +149,7 @@ export default function Backtest() {
     celebrate({
       icon: res.outcome === 'TP' ? 'trophy' : res.win ? 'trending-up' : 'school',
       color: res.win ? colors.gold : colors.primary,
+
       title: `+${res.points} XP`,
       subtitle:
         res.outcome === 'TP'

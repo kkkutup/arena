@@ -4,7 +4,18 @@ import { colors, spacing } from '@/theme/tokens';
 import { unrealizedPnl, roe } from './engine';
 import { fmtSignedUsd, fmtPct, fmtPrice, fmtNum } from '@/lib/format';
 import { INSTRUMENTS } from '@/mock/data';
-import type { OpenPosition } from '@/store/trade';
+import type { Side } from '@/api/types';
+
+// Structural shape shared by the local store's OpenPosition and the server's
+// Position — only the fields this row actually renders.
+type PositionView = {
+  symbol: string;
+  side: Side;
+  qty: number;
+  leverage: number;
+  entryPrice: number;
+  margin: number;
+};
 
 export function PositionRow({
   pos,
@@ -12,7 +23,7 @@ export function PositionRow({
   onClose,
   last,
 }: {
-  pos: OpenPosition;
+  pos: PositionView;
   price: number;
   onClose: () => void;
   last: boolean;

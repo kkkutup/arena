@@ -7,6 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "arena",
     "userInterfaceStyle": "light",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a467ebf2-42b5-4197-ae57-57544df781b1"
+    },
     "ios": {
       "bundleIdentifier": "com.arena.app",
       "icon": "./assets/expo.icon"
@@ -37,7 +43,8 @@
           }
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

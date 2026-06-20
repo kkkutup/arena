@@ -37,7 +37,7 @@ export class PositionsService {
     let used = 0;
     const positions = part.positions.map((p) => {
       const mark = prices[p.symbol] ?? p.entryPrice;
-      const pnl = unrealizedPnl(p.side as Side, p.qty, p.entryPrice, mark);
+      const pnl = unrealizedPnl(p.side, p.qty, p.entryPrice, mark);
       unreal += pnl;
       used += p.margin;
       return {
@@ -76,7 +76,8 @@ export class PositionsService {
     if (!part) throw new ForbiddenException('Join the competition first');
 
     const comp = part.competition;
-    if (comp.status !== 'LIVE') throw new BadRequestException('Competition is not live');
+    if (comp.status !== 'LIVE')
+      throw new BadRequestException('Competition is not live');
     if (!comp.instruments.includes(dto.symbol))
       throw new BadRequestException('Instrument not in this competition');
     if (dto.leverage > comp.maxLeverage)
@@ -90,11 +91,17 @@ export class PositionsService {
     let unreal = 0;
     let used = 0;
     for (const p of part.positions) {
-      unreal += unrealizedPnl(p.side as Side, p.qty, p.entryPrice, prices[p.symbol] ?? p.entryPrice);
+      unreal += unrealizedPnl(
+        p.side,
+        p.qty,
+        p.entryPrice,
+        prices[p.symbol] ?? p.entryPrice,
+      );
       used += p.margin;
     }
     const freeMargin = part.cashBalance + unreal - used;
-    if (margin > freeMargin + 1e-6) throw new BadRequestException('Insufficient free margin');
+    if (margin > freeMargin + 1e-6)
+      throw new BadRequestException('Insufficient free margin');
 
     await this.prisma.position.create({
       data: {
@@ -123,11 +130,16 @@ export class PositionsService {
     if (!pos) throw new NotFoundException('Open position not found');
 
     const price = this.market.getPrice(pos.symbol) ?? pos.entryPrice;
-    const pnl = unrealizedPnl(pos.side as Side, pos.qty, pos.entryPrice, price);
+    const pnl = unrealizedPnl(pos.side, pos.qty, pos.entryPrice, price);
     await this.prisma.$transaction([
       this.prisma.position.update({
         where: { id: pos.id },
-        data: { status: 'CLOSED', closePrice: price, realizedPnl: pnl, closedAt: new Date() },
+        data: {
+          status: 'CLOSED',
+          closePrice: price,
+          realizedPnl: pnl,
+          closedAt: new Date(),
+        },
       }),
       this.prisma.participation.update({
         where: { id: part.id },

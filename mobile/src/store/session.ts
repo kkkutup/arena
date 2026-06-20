@@ -4,7 +4,6 @@ import { jsonStorage } from '@/store/persist';
 import type { Me } from '@/api/types';
 import type { AuthSession } from '@/api/auth';
 import { useWallet } from '@/store/wallet';
-import { useMyCompetitions } from '@/store/competitions';
 import { useTrade } from '@/store/trade';
 import { useLessons } from '@/store/lessons';
 import { DAILY_GOAL_XP } from '@/lib/goals';
@@ -23,6 +22,9 @@ interface SessionState {
   // Backtest mini-game intro tour shown?
   btTourSeen: boolean;
   markBtTourSeen: () => void;
+  // First live trade celebrated? (once ever — not once per competition)
+  firstTradeDone: boolean;
+  markFirstTrade: () => void;
   // XP earned today (drives the Home daily goal). Resets on a new day.
   dailyXp: number;
   dailyXpDate: string | null;
@@ -32,6 +34,8 @@ interface SessionState {
   addXp: (n: number) => void;
   // Real auth (backend): store tokens + user.
   setSession: (session: AuthSession) => void;
+  // Replace just the tokens (used by the http layer's 401 → refresh flow).
+  setTokens: (accessToken: string, refreshToken: string) => void;
   // Mock auth (used by the email form until it's wired to the backend).
   signInWith: (method: AuthMethod, email?: string) => void;
   completeProfile: (username: string, displayName?: string) => void;
@@ -47,12 +51,14 @@ export const useSession = create<SessionState>()(
   needsProfile: false,
   tourSeen: false,
   btTourSeen: false,
+  firstTradeDone: false,
   dailyXp: 0,
   dailyXpDate: null,
   streakDate: null,
 
   markTourSeen: () => set({ tourSeen: true }),
   markBtTourSeen: () => set({ btTourSeen: true }),
+  markFirstTrade: () => set({ firstTradeDone: true }),
 
   addXp: (n) =>
     set((s) => {
@@ -83,6 +89,8 @@ export const useSession = create<SessionState>()(
       needsProfile: false,
     });
   },
+
+  setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
 
   signInWith: (method, email) => {
     useWallet.getState().reset();
@@ -127,7 +135,6 @@ export const useSession = create<SessionState>()(
 
   signOut: () => {
     useWallet.getState().reset();
-    useMyCompetitions.getState().reset();
     useTrade.getState().resetAll();
     useLessons.getState().reset();
     set({
@@ -137,6 +144,7 @@ export const useSession = create<SessionState>()(
       needsProfile: false,
       tourSeen: false,
       btTourSeen: false,
+      firstTradeDone: false,
       dailyXp: 0,
       dailyXpDate: null,
       streakDate: null,
@@ -153,6 +161,7 @@ export const useSession = create<SessionState>()(
         needsProfile: s.needsProfile,
         tourSeen: s.tourSeen,
         btTourSeen: s.btTourSeen,
+        firstTradeDone: s.firstTradeDone,
         dailyXp: s.dailyXp,
         dailyXpDate: s.dailyXpDate,
         streakDate: s.streakDate,
