@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -140,6 +141,7 @@ export class CompetitionsService {
       endAt: comp.endAt,
       joinCode: comp.joinCode,
       participantCount: comp._count.participations,
+      isOwner: comp.creatorId === userId,
       myRank: me?.rank,
       myEquity: me?.equity,
       myReturnPct: me?.returnPct,
@@ -147,14 +149,39 @@ export class CompetitionsService {
   }
 
   async listMine(userId: string) {
+    // "Your competitions" = the user's active private leagues / duels. The global
+    // weekly round (PUBLIC_DIVISION) has its own card, and finished comps are
+    // hidden so closed/ended ones drop off the list.
     const parts = await this.prisma.participation.findMany({
-      where: { userId },
+      where: {
+        userId,
+        competition: {
+          status: { notIn: ['FINISHED', 'SETTLING'] },
+          type: { not: 'PUBLIC_DIVISION' },
+        },
+      },
       select: { competitionId: true },
     });
     const competitions = await Promise.all(
       parts.map((p) => this.detail(userId, p.competitionId)),
     );
     return { competitions };
+  }
+
+  // Creator-only: end a competition early (sets it FINISHED → it leaves the
+  // "Your competitions" list and can no longer be traded).
+  async close(userId: string, competitionId: string) {
+    const comp = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+    });
+    if (!comp) throw new NotFoundException('Competition not found');
+    if (comp.creatorId !== userId)
+      throw new ForbiddenException('Only the creator can close this competition');
+    await this.prisma.competition.updateMany({
+      where: { id: competitionId, status: { not: 'FINISHED' } },
+      data: { status: 'FINISHED' },
+    });
+    return this.detail(userId, competitionId);
   }
 
   async listPublic() {

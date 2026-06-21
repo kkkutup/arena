@@ -64,6 +64,10 @@ export const httpClient: ApiClient = {
     return authedFetch<GlobalRound>('/competitions/global');
   },
 
+  async closeCompetition(id) {
+    return authedFetch<Competition>(`/competitions/${id}/close`, { method: 'POST' });
+  },
+
   async joinByCode(code) {
     return authedFetch<Competition>('/competitions/join', {
       method: 'POST',

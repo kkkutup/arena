@@ -34,6 +34,14 @@ export const useJoinCompetition = () => {
   });
 };
 
+export const useCloseCompetition = () => {
+  const invalidate = useInvalidateCompetitions();
+  return useMutation({
+    mutationFn: (id: string) => api.closeCompetition(id),
+    onSuccess: invalidate,
+  });
+};
+
 export const useJoinByCode = () => {
   const invalidate = useInvalidateCompetitions();
   return useMutation({

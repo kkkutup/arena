@@ -27,6 +27,7 @@ export interface ApiClient {
   createCompetition(input: CreateInput): Promise<Competition>;
   joinCompetition(id: string): Promise<Competition>;
   joinByCode(code: string): Promise<Competition>;
+  closeCompetition(id: string): Promise<Competition>;
   getActivity(): Promise<ActivityItem[]>;
   getFriends(): Promise<Friend[]>;
   getSuggestedFriends(): Promise<Friend[]>;
@@ -229,5 +230,23 @@ export const mockClient: ApiClient = {
   async getGlobalRound() {
     await delay();
     return { exists: false, phase: 'results', nextStartAt: null };
+  },
+  async closeCompetition(id) {
+    await delay();
+    const c = [...mock.COMPETITIONS, ...mock.PUBLIC_COMPETITIONS].find((x) => x.id === id);
+    return {
+      id,
+      name: c?.name ?? 'Competition',
+      type: c?.type ?? 'PRIVATE_LEAGUE',
+      instruments: c?.instruments ?? ['BTCUSDT'],
+      startingBalance: c?.startingBalance ?? 100_000,
+      maxLeverage: c?.maxLeverage ?? 20,
+      status: 'FINISHED',
+      startAt: c?.startAt ?? new Date().toISOString(),
+      endAt: c?.endAt ?? new Date().toISOString(),
+      joinCode: c?.joinCode ?? null,
+      participantCount: c?.participantCount ?? 1,
+      isOwner: true,
+    };
   },
 };

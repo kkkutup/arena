@@ -1,8 +1,13 @@
-import { View, Pressable, Share } from 'react-native';
+import { View, Pressable, Share, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Screen, Txt, Pill, Button, Card, Icon } from '@/ui';
-import { useCompetition, useLeaderboard, useJoinCompetition } from '@/hooks/queries';
+import {
+  useCompetition,
+  useLeaderboard,
+  useJoinCompetition,
+  useCloseCompetition,
+} from '@/hooks/queries';
 import { compTypeMeta } from '@/features/competitions/util';
 import { LeaderboardList } from '@/features/competitions/LeaderboardList';
 import { useWallet, DIAMOND } from '@/store/wallet';
@@ -24,9 +29,30 @@ export default function CompetitionDetail() {
   const canAfford = useWallet((s) => s.canAfford);
   const openStore = useWallet((s) => s.openStore);
   const joinMut = useJoinCompetition();
+  const closeMut = useCloseCompetition();
 
   // The server returns myRank only when the viewer is a participant.
   const joined = c?.myRank != null;
+
+  const onClose = () => {
+    if (!c || closeMut.isPending) return;
+    Alert.alert('Close competition?', `"${c.name}" will end now for everyone. This can't be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Close',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await closeMut.mutateAsync(id);
+            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.back();
+          } catch {
+            void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+        },
+      },
+    ]);
+  };
 
   const onJoin = async () => {
     if (!c || joinMut.isPending) return;
@@ -133,6 +159,18 @@ export default function CompetitionDetail() {
               {rows ? 'No traders yet — be the first to join.' : 'Loading leaderboard…'}
             </Txt>
           )}
+
+          {c.isOwner && c.status !== 'FINISHED' ? (
+            <Button
+              label="Close competition"
+              variant="neutral"
+              full
+              loading={closeMut.isPending}
+              left={<Icon name="lock-closed" size={16} color={colors.down} />}
+              style={{ marginTop: spacing.xl }}
+              onPress={onClose}
+            />
+          ) : null}
         </>
       )}
     </Screen>

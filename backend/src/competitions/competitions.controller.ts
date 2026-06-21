@@ -43,6 +43,11 @@ export class CompetitionsController {
     return this.comps.join(u.userId, id);
   }
 
+  @Post(':id/close')
+  close(@CurrentUser() u: AuthUser, @Param('id') id: string) {
+    return this.comps.close(u.userId, id);
+  }
+
   @Get(':id')
   detail(@CurrentUser() u: AuthUser, @Param('id') id: string) {
     return this.comps.detail(u.userId, id);

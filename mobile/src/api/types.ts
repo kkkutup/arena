@@ -94,6 +94,7 @@ export interface Competition {
   endAt: string; // ISO
   joinCode: string | null;
   participantCount: number;
+  isOwner?: boolean; // viewer created this competition
   // viewer's participation summary (if joined)
   myRank?: number;
   myEquity?: number;
