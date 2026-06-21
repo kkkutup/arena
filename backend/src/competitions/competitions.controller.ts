@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CompetitionsService } from './competitions.service';
+import { GlobalCompetitionService } from './global.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { CreateCompetitionDto, JoinCodeDto } from './dto';
@@ -7,7 +8,15 @@ import { CreateCompetitionDto, JoinCodeDto } from './dto';
 @Controller('competitions')
 @UseGuards(JwtAuthGuard)
 export class CompetitionsController {
-  constructor(private readonly comps: CompetitionsService) {}
+  constructor(
+    private readonly comps: CompetitionsService,
+    private readonly global: GlobalCompetitionService,
+  ) {}
+
+  @Get('global')
+  globalRound(@CurrentUser() u: AuthUser) {
+    return this.global.current(u.userId);
+  }
 
   @Post()
   create(@CurrentUser() u: AuthUser, @Body() dto: CreateCompetitionDto) {

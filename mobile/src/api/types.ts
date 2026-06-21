@@ -177,3 +177,33 @@ export interface RankingResponse {
   rows: RankRow[];
   me: RankRow | null;
 }
+
+export interface GlobalWinner {
+  rank: number;
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  equity: number;
+  returnPct: number;
+}
+
+// The recurring weekly global competition (the "Gold Division").
+export interface GlobalRound {
+  exists: boolean;
+  id?: string;
+  name?: string;
+  status?: CompetitionStatus;
+  startAt?: string; // ISO
+  endAt?: string; // ISO
+  startingBalance?: number;
+  maxLeverage?: number;
+  instruments?: string[];
+  participantCount?: number;
+  phase: 'live' | 'results';
+  joined?: boolean;
+  myRank?: number;
+  myEquity?: number;
+  myReturnPct?: number;
+  winners?: GlobalWinner[];
+  nextStartAt?: string | null; // next Monday, when in results phase
+}

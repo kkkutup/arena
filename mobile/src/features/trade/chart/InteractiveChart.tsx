@@ -1,7 +1,12 @@
 import { useRef, useState } from 'react';
-import { View, Pressable } from 'react-native';
-import Svg, { Rect, Line, Circle, Polygon } from 'react-native-svg';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  View,
+  Pressable,
+  PanResponder,
+  type GestureResponderEvent,
+  type PanResponderGestureState,
+} from 'react-native';
+import Svg, { Rect, Line, Circle, Polygon, Text as SvgText } from 'react-native-svg';
 import { Icon } from '@/ui';
 import type { IconName } from '@/ui/Icon';
 import type { Candle } from '@/features/trade/usePriceEngine';
@@ -10,10 +15,35 @@ import { useChartTools, type ChartTool } from './useChartTools';
 import { drawId, linePriceAt, type Anchor, type Drawing } from './drawings';
 
 const PAD = 10;
+const AXIS_H = 16; // bottom band reserved for time-axis labels
 const MIN_VIEW = 12;
 const MAX_VIEW = 200;
 const HANDLE_HIT = 26;
 const SELECT_HIT = 16;
+
+// Candle times are unix seconds in live mode and ms in the mock feed.
+const toMs = (t: number): number => (t < 1e12 ? t * 1000 : t);
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+function fmtAxisTime(t: number, dateMode: boolean): string {
+  const d = new Date(toMs(t));
+  if (dateMode) return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+// react-native-svg throws a hard native crash on Android if any coordinate prop
+// is NaN/Infinity. Every number we hand to an SVG element goes through this.
+const fin = (v: number, fb = 0): number => (Number.isFinite(v) ? v : fb);
+const num = (v: unknown): number => {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+const clamp = (v: number, lo: number, hi: number): number => Math.min(Math.max(v, lo), hi);
+
+// Distance between the first two active touches (for pinch-zoom).
+function touchDist(touches: { pageX: number; pageY: number }[]): number {
+  if (touches.length < 2) return 0;
+  return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+}
 
 type HandlePart = 'a' | 'b' | 'price' | 'offset';
 
@@ -34,12 +64,14 @@ function buildGeom(candles: Candle[], count: number, rightGap: number, width: nu
   const c = Math.min(Math.max(count, MIN_VIEW), Math.max(MIN_VIEW, n || MIN_VIEW));
   const offset = Math.min(Math.max(n - c - rightGap, 0), Math.max(0, n - c));
   const visible = candles.slice(offset, offset + c);
-  const slot = width / c;
+  const slot = width / Math.max(c, 1);
   let min = Infinity;
   let max = -Infinity;
   for (const k of visible) {
-    if (k.low < min) min = k.low;
-    if (k.high > max) max = k.high;
+    const lo = num(k.low);
+    const hi = num(k.high);
+    if (lo < min) min = lo;
+    if (hi > max) max = hi;
   }
   if (!isFinite(min) || !isFinite(max) || min === max) {
     min = (isFinite(min) ? min : 1) - 1;
@@ -48,20 +80,21 @@ function buildGeom(candles: Candle[], count: number, rightGap: number, width: nu
   const pad = (max - min) * 0.08;
   min -= pad;
   max += pad;
-  const h = height - PAD * 2;
-  const t0 = visible.length ? visible[0].time : 0;
-  const t1 = visible.length ? visible[visible.length - 1].time : 1;
+  const h = height - PAD - AXIS_H;
+  const t0 = visible.length ? num(visible[0].time) : 0;
+  const t1 = visible.length ? num(visible[visible.length - 1].time) : 1;
   const span = t1 - t0 || 1;
+  const range = max - min || 1;
   return {
     count: c,
     visible,
     slot,
     width,
     height,
-    xOf: (time) => slot / 2 + ((time - t0) / span) * (width - slot),
-    yOf: (price) => PAD + (1 - (price - min) / (max - min)) * h,
-    timeOf: (x) => t0 + ((x - slot / 2) / (width - slot || 1)) * span,
-    priceOf: (y) => min + (1 - (y - PAD) / h) * (max - min),
+    xOf: (time) => fin(slot / 2 + ((num(time) - t0) / span) * (width - slot)),
+    yOf: (price) => fin(PAD + (1 - (num(price) - min) / range) * h),
+    timeOf: (x) => fin(t0 + ((x - slot / 2) / (width - slot || 1)) * span),
+    priceOf: (y) => fin(min + (1 - (y - PAD) / h) * range),
   };
 }
 
@@ -104,6 +137,11 @@ function distToDrawing(d: Drawing, px: number, py: number, g: Geom): number {
   return Math.min(distToSegment(px, py, ax, ay, bx, by), distToSegment(px, py, ax, ay2, bx, by2));
 }
 
+// Stable reference for "no drawings yet" — returning a fresh [] from the zustand
+// selector each render makes useSyncExternalStore loop forever ("Maximum update
+// depth exceeded").
+const EMPTY_DRAWINGS: Drawing[] = [];
+
 const TOOLS: { key: ChartTool; icon: IconName }[] = [
   { key: 'move', icon: 'move' },
   { key: 'hline', icon: 'remove' },
@@ -122,11 +160,13 @@ export function InteractiveChart({
   width: number;
   height: number;
 }) {
+  'use no memo'; // opt out of React Compiler — this component mutates a ref during
+  // render (the gesture snapshot), which the compiler can miscompile.
   const tool = useChartTools((s) => s.tool);
   const setTool = useChartTools((s) => s.setTool);
   const selectedId = useChartTools((s) => s.selectedId);
   const select = useChartTools((s) => s.select);
-  const drawings = useChartTools((s) => s.bySymbol[symbol] ?? []);
+  const drawings = useChartTools((s) => s.bySymbol[symbol]) ?? EMPTY_DRAWINGS;
   const add = useChartTools((s) => s.add);
   const replace = useChartTools((s) => s.replace);
   const remove = useChartTools((s) => s.remove);
@@ -142,115 +182,159 @@ export function InteractiveChart({
   const ref = useRef({ geom, candles, count, rightGap, tool, drawings, selectedId, symbol, pending });
   ref.current = { geom, candles, count, rightGap, tool, drawings, selectedId, symbol, pending };
 
+  // Touch handling uses React Native's built-in PanResponder (pure JS, runs on
+  // the JS thread) rather than react-native-gesture-handler — no Reanimated /
+  // worklets involved, so it can't trigger a native gesture/worklet crash.
+  const grant = useRef<{ x: number; y: number } | null>(null);
   const panStart = useRef<number | null>(null);
-  const pinchStart = useRef<number | null>(null);
+  const pinchStart = useRef<{ dist: number; count: number } | null>(null);
   const dragHandle = useRef<{ id: string; part: HandlePart } | null>(null);
+  const moved = useRef(false);
 
-  const pan = Gesture.Pan()
-    .minDistance(6)
-    .runOnJS(true)
-    .onBegin((e) => {
-      const r = ref.current;
-      dragHandle.current = null;
-      panStart.current = null;
-      if (r.tool !== 'move') return;
-      if (r.selectedId) {
-        const d = r.drawings.find((x) => x.id === r.selectedId);
-        if (d) {
-          for (const hnd of handlesOf(d, r.geom)) {
-            if (Math.hypot(e.x - hnd.x, e.y - hnd.y) <= HANDLE_HIT) {
-              dragHandle.current = { id: d.id, part: hnd.part };
-              return;
+  // A discrete tap (no drag, no pinch): select a drawing or place a draw point.
+  const handleTap = (x: number, y: number) => {
+    const r = ref.current;
+    const g = r.geom;
+    if (r.tool === 'move') {
+      let bestId: string | null = null;
+      let best = SELECT_HIT;
+      for (const d of r.drawings) {
+        const dist = distToDrawing(d, x, y, g);
+        if (dist < best) {
+          best = dist;
+          bestId = d.id;
+        }
+      }
+      select(bestId);
+      return;
+    }
+    const pt: Anchor = { time: g.timeOf(x), price: g.priceOf(y) };
+    if (r.tool === 'hline') {
+      const d: Drawing = { id: drawId(), kind: 'hline', price: pt.price };
+      add(r.symbol, d);
+      select(d.id);
+      setTool('move');
+      return;
+    }
+    const need = r.tool === 'trend' ? 2 : 3;
+    const pts = [...r.pending, pt];
+    if (pts.length < need) {
+      setPending(pts);
+      return;
+    }
+    let d: Drawing;
+    if (r.tool === 'trend') {
+      d = { id: drawId(), kind: 'trend', a: pts[0], b: pts[1] };
+    } else {
+      const offset = pts[2].price - linePriceAt(pts[0], pts[1], pts[2].time);
+      d = { id: drawId(), kind: 'channel', a: pts[0], b: pts[1], offset };
+    }
+    add(r.symbol, d);
+    select(d.id);
+    setPending([]);
+    setTool('move');
+  };
+
+  const responder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      // Don't let a parent ScrollView steal an in-progress chart gesture.
+      onPanResponderTerminationRequest: () => false,
+      onShouldBlockNativeResponder: () => true,
+      onPanResponderGrant: (e: GestureResponderEvent) => {
+        const r = ref.current;
+        const { locationX, locationY, touches } = e.nativeEvent;
+        grant.current = { x: locationX, y: locationY };
+        moved.current = false;
+        panStart.current = null;
+        pinchStart.current = null;
+        dragHandle.current = null;
+        if (touches.length >= 2) {
+          pinchStart.current = { dist: touchDist(touches), count: r.count };
+          return;
+        }
+        if (r.tool !== 'move') return;
+        if (r.selectedId) {
+          const d = r.drawings.find((x) => x.id === r.selectedId);
+          if (d) {
+            for (const hnd of handlesOf(d, r.geom)) {
+              if (Math.hypot(locationX - hnd.x, locationY - hnd.y) <= HANDLE_HIT) {
+                dragHandle.current = { id: d.id, part: hnd.part };
+                return;
+              }
             }
           }
         }
-      }
-      panStart.current = r.rightGap;
-    })
-    .onUpdate((e) => {
-      const r = ref.current;
-      if (dragHandle.current) {
-        const d = r.drawings.find((x) => x.id === dragHandle.current!.id);
-        if (d) replace(r.symbol, moveHandle(d, dragHandle.current.part, r.geom.timeOf(e.x), r.geom.priceOf(e.y)));
-        return;
-      }
-      if (r.tool === 'move' && panStart.current != null) {
-        const maxGap = Math.max(0, r.candles.length - r.geom.count);
-        const next = panStart.current + Math.round(e.translationX / (r.geom.slot || 1));
-        setRightGap(Math.min(Math.max(next, 0), maxGap));
-      }
-    })
-    .onFinalize(() => {
-      panStart.current = null;
-      dragHandle.current = null;
-    });
+        panStart.current = r.rightGap;
+      },
+      onPanResponderMove: (e: GestureResponderEvent, g: PanResponderGestureState) => {
+        const r = ref.current;
+        const touches = e.nativeEvent.touches;
+        if (Math.abs(g.dx) > 6 || Math.abs(g.dy) > 6) moved.current = true;
 
-  const pinch = Gesture.Pinch()
-    .runOnJS(true)
-    .onBegin(() => {
-      pinchStart.current = ref.current.count;
-    })
-    .onUpdate((e) => {
-      if (ref.current.tool !== 'move' || pinchStart.current == null) return;
-      const next = Math.round(pinchStart.current / e.scale);
-      setCount(Math.min(Math.max(next, MIN_VIEW), Math.min(MAX_VIEW, ref.current.candles.length || MIN_VIEW)));
-    })
-    .onFinalize(() => {
-      pinchStart.current = null;
-    });
-
-  const tap = Gesture.Tap()
-    .maxDistance(14)
-    .runOnJS(true)
-    .onEnd((e, success) => {
-      if (!success) return;
-      const r = ref.current;
-      const g = r.geom;
-      if (r.tool === 'move') {
-        let bestId: string | null = null;
-        let best = SELECT_HIT;
-        for (const d of r.drawings) {
-          const dist = distToDrawing(d, e.x, e.y, g);
-          if (dist < best) {
-            best = dist;
-            bestId = d.id;
+        // pinch — zoom by the ratio of start/current finger spread
+        if (touches.length >= 2) {
+          if (!pinchStart.current) pinchStart.current = { dist: touchDist(touches), count: r.count };
+          const dist = touchDist(touches);
+          if (pinchStart.current.dist > 0 && dist > 0) {
+            const next = Math.round(pinchStart.current.count * (pinchStart.current.dist / dist));
+            setCount(clamp(next, MIN_VIEW, Math.min(MAX_VIEW, r.candles.length || MIN_VIEW)));
           }
+          return;
         }
-        select(bestId);
-        return;
-      }
-      const pt: Anchor = { time: g.timeOf(e.x), price: g.priceOf(e.y) };
-      if (r.tool === 'hline') {
-        const d: Drawing = { id: drawId(), kind: 'hline', price: pt.price };
-        add(r.symbol, d);
-        select(d.id);
-        setTool('move');
-        return;
-      }
-      const need = r.tool === 'trend' ? 2 : 3;
-      const pts = [...r.pending, pt];
-      if (pts.length < need) {
-        setPending(pts);
-        return;
-      }
-      let d: Drawing;
-      if (r.tool === 'trend') {
-        d = { id: drawId(), kind: 'trend', a: pts[0], b: pts[1] };
-      } else {
-        const offset = pts[2].price - linePriceAt(pts[0], pts[1], pts[2].time);
-        d = { id: drawId(), kind: 'channel', a: pts[0], b: pts[1], offset };
-      }
-      add(r.symbol, d);
-      select(d.id);
-      setPending([]);
-      setTool('move');
-    });
 
-  const gesture = Gesture.Simultaneous(pinch, pan, tap);
+        // drag a selected drawing's handle
+        if (dragHandle.current && grant.current) {
+          const d = r.drawings.find((x) => x.id === dragHandle.current!.id);
+          if (d) {
+            const lx = grant.current.x + g.dx;
+            const ly = grant.current.y + g.dy;
+            replace(r.symbol, moveHandle(d, dragHandle.current.part, r.geom.timeOf(lx), r.geom.priceOf(ly)));
+          }
+          return;
+        }
+
+        // pan time
+        if (r.tool === 'move' && panStart.current != null) {
+          const maxGap = Math.max(0, r.candles.length - r.geom.count);
+          const next = panStart.current + Math.round(g.dx / (r.geom.slot || 1));
+          setRightGap(clamp(next, 0, maxGap));
+        }
+      },
+      onPanResponderRelease: (_e: GestureResponderEvent, g: PanResponderGestureState) => {
+        const wasPinch = !!pinchStart.current;
+        const isTap = !moved.current && !wasPinch && Math.abs(g.dx) < 8 && Math.abs(g.dy) < 8;
+        if (isTap && grant.current) handleTap(grant.current.x, grant.current.y);
+        panStart.current = null;
+        dragHandle.current = null;
+        pinchStart.current = null;
+      },
+      onPanResponderTerminate: () => {
+        panStart.current = null;
+        dragHandle.current = null;
+        pinchStart.current = null;
+      },
+    }),
+  ).current;
 
   const { visible, slot, xOf, yOf } = geom;
-  const lastClose = visible.length ? visible[visible.length - 1].close : 0;
-  const bodyW = Math.max(2, slot * 0.6);
+  const lastClose = visible.length ? num(visible[visible.length - 1].close) : 0;
+  const bodyW = fin(Math.max(2, slot * 0.6), 2);
+
+  // Time-axis ticks: a handful of evenly-spaced labels across the visible candles.
+  // Show dates once the window spans more than ~3 days, otherwise HH:MM.
+  const axisTicks: { x: number; label: string }[] = [];
+  if (visible.length > 1) {
+    const spanMs = toMs(num(visible[visible.length - 1].time)) - toMs(num(visible[0].time));
+    const dateMode = spanMs > 3 * 86400 * 1000;
+    const ticks = 4;
+    for (let i = 0; i < ticks; i++) {
+      const idx = Math.min(visible.length - 1, Math.floor(((i + 0.5) / ticks) * visible.length));
+      const c = visible[idx];
+      axisTicks.push({ x: clamp(xOf(c.time), 16, width - 16), label: fmtAxisTime(num(c.time), dateMode) });
+    }
+  }
 
   return (
     <View>
@@ -272,8 +356,7 @@ export function InteractiveChart({
         {drawings.length ? <ToolBtn icon="layers-outline" onPress={() => clear(symbol)} /> : null}
       </View>
 
-      <GestureDetector gesture={gesture}>
-        <View style={{ width, height }}>
+      <View style={{ width, height }} {...responder.panHandlers}>
           {width > 0 ? (
             <Svg width={width} height={height}>
               {/* candles */}
@@ -335,10 +418,24 @@ export function InteractiveChart({
               {pending.map((p, i) => (
                 <Circle key={`p${i}`} cx={xOf(p.time)} cy={yOf(p.price)} r={5} fill={colors.primary} />
               ))}
+
+              {/* time axis */}
+              {axisTicks.map((t, i) => (
+                <SvgText
+                  key={`t${i}`}
+                  x={t.x}
+                  y={height - 4}
+                  fill={colors.faint}
+                  fontSize={9}
+                  fontWeight="600"
+                  textAnchor="middle"
+                >
+                  {t.label}
+                </SvgText>
+              ))}
             </Svg>
           ) : null}
         </View>
-      </GestureDetector>
     </View>
   );
 }

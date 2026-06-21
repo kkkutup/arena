@@ -14,6 +14,7 @@ function useInvalidateCompetitions() {
     void qc.invalidateQueries({ queryKey: ['public-competitions'] });
     void qc.invalidateQueries({ queryKey: ['competition'] });
     void qc.invalidateQueries({ queryKey: ['leaderboard'] });
+    void qc.invalidateQueries({ queryKey: ['global-round'] });
   };
 }
 
@@ -43,6 +44,13 @@ export const useJoinByCode = () => {
 
 export const usePublicCompetitions = () =>
   useQuery({ queryKey: ['public-competitions'], queryFn: () => api.getPublicCompetitions() });
+
+export const useGlobalRound = () =>
+  useQuery({
+    queryKey: ['global-round'],
+    queryFn: () => api.getGlobalRound(),
+    refetchInterval: 15000,
+  });
 
 export const useCompetition = (id: string, enabled = true) =>
   useQuery({

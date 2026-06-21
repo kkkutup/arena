@@ -12,6 +12,7 @@ import type {
   OpenPositionInput,
   RankingMetric,
   RankingResponse,
+  GlobalRound,
 } from './types';
 import * as mock from '@/mock/data';
 
@@ -45,6 +46,7 @@ export interface ApiClient {
   removeFriend(userId: string): Promise<Friend[]>;
   getRanking(metric: RankingMetric): Promise<RankingResponse>;
   addXp(amount: number): Promise<void>;
+  getGlobalRound(): Promise<GlobalRound>;
 }
 
 const delay = (ms = 220) => new Promise<void>((r) => setTimeout(r, ms));
@@ -223,5 +225,9 @@ export const mockClient: ApiClient = {
   },
   async addXp() {
     await delay(0);
+  },
+  async getGlobalRound() {
+    await delay();
+    return { exists: false, phase: 'results', nextStartAt: null };
   },
 };

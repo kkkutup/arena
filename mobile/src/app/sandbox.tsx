@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Screen, Txt, Card, Icon } from '@/ui';
+import { Screen, Txt, Card, Icon, ErrorBoundary } from '@/ui';
 import { colors, spacing, radius } from '@/theme/tokens';
 import { INSTRUMENTS } from '@/mock/data';
 import { usePriceEngine, type Candle } from '@/features/trade/usePriceEngine';
 import { InteractiveChart } from '@/features/trade/chart/InteractiveChart';
+import { CandleChart } from '@/features/trade/CandleChart';
 import { OrderTicket } from '@/features/trade/OrderTicket';
 import { PositionRow } from '@/features/trade/PositionRow';
 import { unrealizedPnl } from '@/features/trade/engine';
@@ -233,7 +234,7 @@ export default function Sandbox() {
                 paddingHorizontal: spacing.md,
                 paddingVertical: spacing.sm,
                 borderRadius: radius.md,
-                backgroundColor: active ? colors.ink : colors.surfaceAlt,
+                backgroundColor: active ? colors.primary : colors.surfaceAlt,
                 minWidth: 96,
               }}
             >
@@ -289,7 +290,7 @@ export default function Sandbox() {
                     paddingHorizontal: spacing.md,
                     paddingVertical: 6,
                     borderRadius: radius.sm,
-                    backgroundColor: active ? colors.ink : colors.surfaceAlt,
+                    backgroundColor: active ? colors.primary : colors.surfaceAlt,
                   }}
                 >
                   <Txt variant="label" color={active ? colors.white : colors.muted}>
@@ -301,12 +302,23 @@ export default function Sandbox() {
           </ScrollView>
         ) : null}
         <View style={{ marginTop: spacing.md }}>
-          <InteractiveChart
-            candles={candles}
-            symbol={symbol}
-            width={chartWidth}
-            height={CHART_HEIGHT}
-          />
+          <ErrorBoundary
+            fallback={(error) => (
+              <View>
+                <CandleChart candles={candles} width={chartWidth} height={190} />
+                <Txt variant="tiny" color={colors.down} style={{ marginTop: spacing.sm }}>
+                  chart error: {error.message}
+                </Txt>
+              </View>
+            )}
+          >
+            <InteractiveChart
+              candles={candles}
+              symbol={symbol}
+              width={chartWidth}
+              height={CHART_HEIGHT}
+            />
+          </ErrorBoundary>
         </View>
       </Card>
 

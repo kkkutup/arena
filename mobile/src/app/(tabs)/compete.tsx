@@ -1,22 +1,17 @@
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Button, Card, Icon, EmptyState } from '@/ui';
-import { usePublicCompetitions, useDivision, useCompetitions, useRanking } from '@/hooks/queries';
+import { usePublicCompetitions, useCompetitions, useRanking } from '@/hooks/queries';
 import { CompetitionCard } from '@/features/competitions/CompetitionCard';
+import { GlobalArenaCard } from '@/features/competitions/GlobalArenaCard';
 import { DiamondPill } from '@/features/wallet/DiamondPill';
-import { tierMeta } from '@/features/competitions/util';
 import { useThemeSync } from '@/store/theme';
-import { useIsFresh } from '@/hooks/useIsFresh';
-import type { Division } from '@/api/types';
 import { colors, spacing, radius } from '@/theme/tokens';
-import { timeLeft } from '@/lib/format';
 
 export default function Compete() {
   useThemeSync();
   const router = useRouter();
-  const fresh = useIsFresh();
   const pub = usePublicCompetitions();
-  const div = useDivision();
   const myComps = useCompetitions().data ?? [];
   const me = useRanking('xp').data?.me;
 
@@ -71,9 +66,7 @@ export default function Compete() {
         </Card>
       </Pressable>
 
-      {!fresh && div.data ? (
-        <DivisionCard div={div.data} onPress={() => router.push('/division')} />
-      ) : null}
+      <GlobalArenaCard />
 
       <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
         Your competitions
@@ -100,35 +93,5 @@ export default function Compete() {
         ))}
       </View>
     </Screen>
-  );
-}
-
-function DivisionCard({ div, onPress }: { div: Division; onPress: () => void }) {
-  const meta = tierMeta(div.tier);
-  const me = div.rows.find((r) => r.isMe);
-  return (
-    <Pressable onPress={onPress}>
-      <Card style={{ marginTop: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <View
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: radius.lg,
-            backgroundColor: meta.color + '22',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Icon name="trophy" size={28} color={meta.color} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Txt variant="h3">{meta.label} Division</Txt>
-          <Txt variant="small" color={colors.muted}>
-            Rank #{me?.rank ?? '—'} · resets in {timeLeft(div.weekEndsAt)}
-          </Txt>
-        </View>
-        <Icon name="chevron-forward" size={22} color={colors.faint} />
-      </Card>
-    </Pressable>
   );
 }

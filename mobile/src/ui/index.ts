@@ -11,3 +11,4 @@ export * from './Icon';
 export * from './Screen';
 export * from './EmptyState';
 export * from './CelebrationOverlay';
+export * from './ErrorBoundary';

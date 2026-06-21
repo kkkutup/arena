@@ -6,6 +6,7 @@ import type {
   CompetitionAccount,
   Friend,
   RankingResponse,
+  GlobalRound,
 } from './types';
 import { mockClient, type ApiClient } from './client';
 import { authedFetch, apiFetch } from './http';
@@ -57,6 +58,10 @@ export const httpClient: ApiClient = {
 
   async joinCompetition(id) {
     return authedFetch<Competition>(`/competitions/${id}/join`, { method: 'POST' });
+  },
+
+  async getGlobalRound() {
+    return authedFetch<GlobalRound>('/competitions/global');
   },
 
   async joinByCode(code) {

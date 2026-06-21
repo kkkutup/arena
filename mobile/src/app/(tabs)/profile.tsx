@@ -5,6 +5,7 @@ import { useSession } from '@/store/session';
 import { useWallet } from '@/store/wallet';
 import { useTheme, useThemeSync } from '@/store/theme';
 import { AchievementGrid } from '@/features/profile/AchievementGrid';
+import { UpdateTag } from '@/features/profile/UpdateTag';
 import { useIsFresh } from '@/hooks/useIsFresh';
 import { colors, spacing, radius } from '@/theme/tokens';
 
@@ -92,6 +93,8 @@ export default function Profile() {
           thumbColor={colors.white}
         />
       </Card>
+
+      <UpdateTag />
 
       <Txt variant="h2" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>
         Achievements
